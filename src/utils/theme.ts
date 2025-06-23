@@ -1,6 +1,6 @@
 // Theme color definitions
 export const lightTheme = {
-    name: 'Light Theme',
+    name: 'light' as ThemeName,
     // Background colors
     background: {
         primary: '#ffffff',
@@ -67,7 +67,7 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-    name: 'Dark Theme',
+    name: 'dark' as ThemeName,
     // Background colors
     background: {
         primary: '#1a1a1a',
@@ -139,3 +139,5 @@ export const themes = {
 };
 
 export type Theme = typeof lightTheme | typeof darkTheme;
+
+export type ThemeName = 'light' | 'dark';

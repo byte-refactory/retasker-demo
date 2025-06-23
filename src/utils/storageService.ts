@@ -1,30 +1,34 @@
 import type { Task } from '../models/Task';
 import type { TaskList } from '../models/TaskList';
-import type { Theme } from './theme';
-import {lightTheme} from './theme';
+import { themes, type Theme, type ThemeName } from './theme';
 
 const TASK_LIST_STORAGE_KEY = 'retasker_task_lists';
-const THEME_STORAGE_KEY = 'retasker_theme';
+const THEME_NAME_STORAGE_KEY = 'retasker_theme_name';
 
 export class StorageService {
-
-  // Get all task lists from localStorage
-  static getTheme(): Theme {
+  // Get theme name from localStorage and return corresponding theme
+  static getThemeName(): ThemeName {
     try {
-      const data = localStorage.getItem(THEME_STORAGE_KEY) ;
-      return data ? JSON.parse(data) : lightTheme;
+      const themeName = localStorage.getItem(THEME_NAME_STORAGE_KEY);
+      return (themeName === 'light' || themeName === 'dark') ? themeName : 'light';
     } catch (error) {
-      console.error('Error reading task lists from localStorage:', error);
-      return lightTheme;
+      console.error('Error reading theme name from localStorage:', error);
+      return 'light';
     }
   }
 
-  static setTheme(theme: Theme): void {
+  static setThemeName(themeName: ThemeName): void {
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme));
+      localStorage.setItem(THEME_NAME_STORAGE_KEY, themeName);
     } catch (error) {
-      console.error('Error saving theme to localStorage:', error);
+      console.error('Error saving theme name to localStorage:', error);
     }
+  }
+
+  // Helper method to get theme object from name
+  static getTheme(): Theme {
+    const themeName = this.getThemeName();
+    return themes[themeName];
   }
 
   // Get all task lists from localStorage

@@ -1,4 +1,3 @@
-import React from 'react';
 import type { TaskList } from '../../models';
 import { getContrastTextColor } from '../../utils';
 import TaskCard from '../TaskCard';
@@ -9,11 +8,19 @@ interface TaskColumnProps {
   taskList: TaskList;
 }
 
-const TaskColumn: React.FC<TaskColumnProps> = ({ taskList }) => {
-  const { theme } = useTheme();
+function TaskColumn({ taskList }: TaskColumnProps) {
+  const { theme } = useTheme();  
   return (
-    <div className="column" style= {{backgroundColor: theme.taskBoard.columnBackground, borderColor: theme.taskBoard.columnBorder}}>
+    <section 
+      className="column" 
+      aria-labelledby={`column-${taskList.id}-title`}
+      style={{
+        backgroundColor: theme.taskBoard.columnBackground, 
+        borderColor: theme.taskBoard.columnBorder
+      }}
+    >
       <h3 
+        id={`column-${taskList.id}-title`}
         className="column-title" 
         style={{ 
           background: taskList.color,
@@ -22,17 +29,18 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ taskList }) => {
       >
         {taskList.name}
       </h3>
-      <div className="column-content">
+      <div className="column-content" role="list" aria-label={`Tasks in ${taskList.name}`}>
         {taskList.tasks.length > 0 ? (
           taskList.tasks.map(task => (
             <TaskCard key={task.id} task={task} columnColor={taskList.color} />
           ))
         ) : (
-          <p className="empty-message">No tasks in this list</p>
+          <p className="empty-message" role="status" aria-live="polite">
+            No tasks in this list
+          </p>
         )}
-      </div>
-    </div>
+      </div>    </section>
   );
-};
+}
 
 export default TaskColumn;

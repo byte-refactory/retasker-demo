@@ -1,10 +1,10 @@
-import React from 'react';
 import TaskBoard from '../../components/TaskBoard';
+import { TaskListProvider } from '../../contexts/TaskListsContext';
 import type { TaskList } from '../../models';
 import { useTheme } from '../../contexts/ThemeContext';
 import './TaskBoardPage.css';
 
-const TaskBoardPage: React.FC = () => {
+function TaskBoardPage() {
   const { theme } = useTheme();
 
   // Sample task lists - in a real app, this would come from state management or API
@@ -70,12 +70,13 @@ const TaskBoardPage: React.FC = () => {
   };
 
   const taskLists = [toDoList, inProgressList, doneList];
-
   return (
-    <div className="task-board-page" style={{ backgroundColor: theme.background.primary }}>
-      <TaskBoard taskLists={taskLists} />
-    </div>
+    <TaskListProvider>
+      <div className="task-board-page" style={{ backgroundColor: theme.background.primary }}>
+        <TaskBoard taskLists={taskLists} />
+      </div>
+    </TaskListProvider>
   );
-};
+}
 
 export default TaskBoardPage;
