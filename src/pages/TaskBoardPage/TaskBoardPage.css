@@ -1,7 +1,8 @@
 .task-board-page {
   min-height: 100vh;
-  background-color: #ffffff;
+  width: 100%;
   padding: 0;
+  transition: background-color 0.2s ease;
 }
 
 /* Additional page-level styling can go here */

@@ -5,11 +5,48 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 2px dashed;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 
 .task-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.task-arrow-container {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.task-arrow {
+  color: #666;
+}
+
+.task-arrow-right {
+  display: block;
+}
+
+.task-arrow-down {
+  display: none;
+}
+
+.task-card:hover .task-arrow-container {
+  opacity: 1;
+}
+
+/* Show down arrow instead of right arrow on narrow screens */
+@media (max-width: 806px) {
+  .task-arrow-right {
+    display: none;
+  }
+  
+  .task-arrow-down {
+    display: block;
+  }
 }
 
 .task-title {

@@ -1,9 +1,12 @@
 import React from 'react';
 import TaskBoard from '../../components/TaskBoard';
 import type { TaskList } from '../../models';
+import { useTheme } from '../../contexts/ThemeContext';
 import './TaskBoardPage.css';
 
 const TaskBoardPage: React.FC = () => {
+  const { theme } = useTheme();
+
   // Sample task lists - in a real app, this would come from state management or API
   const toDoList: TaskList = {
     id: 'to-do',
@@ -69,7 +72,7 @@ const TaskBoardPage: React.FC = () => {
   const taskLists = [toDoList, inProgressList, doneList];
 
   return (
-    <div className="task-board-page">
+    <div className="task-board-page" style={{ backgroundColor: theme.background.primary }}>
       <TaskBoard taskLists={taskLists} />
     </div>
   );

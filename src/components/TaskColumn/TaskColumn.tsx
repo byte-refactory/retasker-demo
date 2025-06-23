@@ -2,6 +2,7 @@ import React from 'react';
 import type { TaskList } from '../../models';
 import { getContrastTextColor } from '../../utils';
 import TaskCard from '../TaskCard';
+import { useTheme } from '../../contexts/ThemeContext';
 import './TaskColumn.css';
 
 interface TaskColumnProps {
@@ -9,8 +10,9 @@ interface TaskColumnProps {
 }
 
 const TaskColumn: React.FC<TaskColumnProps> = ({ taskList }) => {
+  const { theme } = useTheme();
   return (
-    <div className="column">
+    <div className="column" style= {{backgroundColor: theme.taskBoard.columnBackground, borderColor: theme.taskBoard.columnBorder}}>
       <h3 
         className="column-title" 
         style={{ 
