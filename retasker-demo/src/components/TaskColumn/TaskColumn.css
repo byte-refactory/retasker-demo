@@ -1,0 +1,29 @@
+.column {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 400px;
+  border: 1px solid #e9ecef;
+}
+
+.column-title {
+  text-align: center;
+  margin: 0 0 16px 0;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.column-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty-message {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  margin: 20px 0;
+}

@@ -1,0 +1,8 @@
+.task-board-page {
+  min-height: 100vh;
+  background-color: #ffffff;
+  padding: 0;
+}
+
+/* Additional page-level styling can go here */
+/* For example: navigation, page headers, footers, etc. */

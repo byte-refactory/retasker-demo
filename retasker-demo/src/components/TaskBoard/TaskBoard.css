@@ -1,0 +1,42 @@
+.task-board {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.board-title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2rem;
+}
+
+.board-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Each column takes equal space when horizontal, full width when wrapped */
+.board-columns > * {
+  flex: 1 1 300px; /* grow, shrink, min-width */
+  min-width: 300px;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .task-board {
+    padding: 10px;
+  }
+  
+  .board-columns {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .board-columns > * {
+    flex: none;
+    min-width: unset;
+  }
+}
