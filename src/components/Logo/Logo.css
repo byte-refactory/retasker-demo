@@ -1,0 +1,44 @@
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: opacity 0.2s ease;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.logo-image {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  transition: opacity 0.2s ease;
+}
+
+.product-name-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.separator {
+  font-size: 1.3rem;
+  font-weight: 300;
+  line-height: 1;
+  margin-top: -7px;;
+}
+
+.product-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: color 0.2s ease;
+  line-height: 1;
+  margin-top: -4px;
+}
+
+/*only the image should change opacity on hover*/
+.logo-image:hover {
+  opacity: 0.8;
+}
+

@@ -1,15 +1,25 @@
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import TaskBoardPage from './pages/TaskBoardPage';
 import Attribution from './components/Attribution';
 import ThemeToggle from './components/ThemeToggle';
-import { useTheme } from './contexts/ThemeContext';
+import Logo from './components/Logo';
 import './App.css';
 
 function AppContent() {
-  const { theme } = useTheme();
-    return (
-    <div className="app" style={{ backgroundColor: theme.background.primary }}>
-      <ThemeToggle/>
+  const { themeName, theme } = useTheme();
+  
+  return (
+    <div data-theme={themeName}>
+      <header 
+        className="app-header"
+        style={{
+          backgroundColor: theme.header.background,
+          borderBottom: `1px solid ${theme.header.borderBottom}`,
+        }}
+      >
+        <Logo />
+        <ThemeToggle />
+      </header>
       <TaskBoardPage />
       <Attribution />
     </div>

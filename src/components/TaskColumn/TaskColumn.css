@@ -6,13 +6,48 @@
   border: 1px solid #e9ecef;
 }
 
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 16px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
 .column-title {
   text-align: center;
-  margin: 0 0 16px 0;
-  padding: 8px;
-  border-radius: 6px;
+  margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
+  flex: 1;
+}
+
+.add-task-button {
+  padding: 4px;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.add-task-button:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.add-task-button:active {
+  transform: scale(0.95);
+}
+
+.add-task-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .column-content {

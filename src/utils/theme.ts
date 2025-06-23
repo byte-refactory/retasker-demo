@@ -64,6 +64,11 @@ export const lightTheme = {
         border: 'rgba(0, 0, 0, 0.1)',
         shadow: 'rgba(0, 0, 0, 0.1)',
     },
+
+    header: { 
+        background: '#eeeeee', 
+        borderBottom: 'rgba(0, 0, 0, 0.1)'
+    }
 };
 
 export const darkTheme = {
@@ -131,6 +136,11 @@ export const darkTheme = {
         border: 'rgba(255, 255, 255, 0.1)',
         shadow: 'rgba(0, 0, 0, 0.3)',
     },
+
+    header: { 
+        background: '#111111', 
+        borderBottom: 'rgba(255, 255, 255, 0.1)'
+    }
 };
 
 export const themes = {
