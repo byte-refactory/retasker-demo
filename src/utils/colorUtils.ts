@@ -16,32 +16,23 @@
  */
 export const getContrastTextColor = (backgroundColor: string): string => {
   try {
-    // Use canvas to convert any CSS color to RGB values
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
     const ctx = canvas.getContext('2d');
     
     if (!ctx) {
-      throw new Error('Canvas context not available');
+      // Fail gracefully if canvas is not available (e.g., in jsdom)
+      return '#999999'; // fallback color
     }
     
-    // Set the color and draw a pixel
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, 1, 1);
-    
-    // Get the RGB values
     const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-    
-    // Calculate relative luminance using WCAG formula
-    // https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
-    // Return white text for dark backgrounds, black text for light backgrounds
     return luminance > 0.5 ? '#000000' : '#ffffff';
   } catch (error) {
-    console.warn('Failed to calculate contrast color for:', backgroundColor, error);
-    // Fallback: return gray text as default
+    // Optionally: console.warn('Failed to calculate contrast color for:', backgroundColor, error);
     return '#999999';
   }
 };

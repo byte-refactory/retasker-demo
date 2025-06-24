@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
+import './CreateTaskModal.css';
 
 interface CreateTaskModalProps {
   onClose: () => void;
@@ -32,51 +33,28 @@ export default function CreateTaskModal({ onClose, taskListId, taskListName }: C
     setFormData({ title: '', description: '' });
     onClose();
   };
-
   return (
-    <div style={{ padding: '24px', minWidth: '450px' }}>
+    <div className="create-task-modal">
       {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '20px'
-      }}>
-        <h2 style={{ 
-          margin: 0, 
-          color: theme.text.primary,
-          fontSize: '1.25rem',
-          fontWeight: 600
-        }}>
+      <div className="create-task-modal-header">
+        <h2 className="create-task-modal-title" style={{ color: theme.text.primary }}>
           Add Task to {taskListName}
         </h2>
         <button
           onClick={handleClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: theme.text.secondary,
-            cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '4px',
-          }}
+          className="create-task-modal-close-btn"
+          style={{ color: theme.text.secondary }}
           aria-label="Close"
         >
           <X size={20} />
         </button>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '16px' }}>
+      </div>      {/* Form */}
+      <form className="create-task-modal-form" onSubmit={handleSubmit}>
+        <div>
           <label 
             htmlFor="task-title"
-            style={{ 
-              display: 'block', 
-              marginBottom: '8px',
-              color: theme.text.primary,
-              fontWeight: 500
-            }}
+            className="create-task-modal-label"
+            style={{ color: theme.text.primary }}
           >
             Task Title *
           </label>
@@ -86,29 +64,19 @@ export default function CreateTaskModal({ onClose, taskListId, taskListName }: C
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             placeholder="Enter task title..."
+            className="create-task-modal-input"
             style={{
-              width: '100%',
-              padding: '8px 12px',
               border: `1px solid ${theme.border.medium}`,
-              borderRadius: '4px',
               backgroundColor: theme.background.primary,
               color: theme.text.primary,
-              fontSize: '14px',
-              boxSizing: 'border-box',
             }}
             autoFocus
           />
-        </div>
-
-        <div style={{ marginBottom: '24px' }}>
+        </div>        <div>
           <label 
             htmlFor="task-description"
-            style={{ 
-              display: 'block', 
-              marginBottom: '8px',
-              color: theme.text.primary,
-              fontWeight: 500
-            }}
+            className="create-task-modal-label"
+            style={{ color: theme.text.primary }}
           >
             Description
           </label>
@@ -118,38 +86,23 @@ export default function CreateTaskModal({ onClose, taskListId, taskListName }: C
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             placeholder="Enter task description (optional)..."
             rows={3}
+            className="create-task-modal-textarea"
             style={{
-              width: '100%',
-              padding: '8px 12px',
               border: `1px solid ${theme.border.medium}`,
-              borderRadius: '4px',
               backgroundColor: theme.background.primary,
               color: theme.text.primary,
-              fontSize: '14px',
-              boxSizing: 'border-box',
-              resize: 'vertical',
-              fontFamily: 'inherit',
             }}
           />
-        </div>
-
-        {/* Footer */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '12px', 
-          justifyContent: 'flex-end'
-        }}>
+        </div>        {/* Footer */}
+        <div className="create-task-modal-footer">
           <button
             type="button"
             onClick={handleClose}
+            className="create-task-modal-cancel-btn"
             style={{
-              padding: '8px 16px',
               border: `1px solid ${theme.border.medium}`,
-              borderRadius: '4px',
               backgroundColor: theme.background.secondary,
               color: theme.text.primary,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
             }}
           >
             Cancel
@@ -157,15 +110,11 @@ export default function CreateTaskModal({ onClose, taskListId, taskListName }: C
           <button
             type="submit"
             disabled={!formData.title.trim()}
+            className="create-task-modal-submit-btn"
             style={{
-              padding: '8px 16px',
               border: `1px solid ${theme.interactive.primary}`,
-              borderRadius: '4px',
               backgroundColor: theme.interactive.primary,
-              color: '#ffffff',
-              cursor: formData.title.trim() ? 'pointer' : 'not-allowed',
               opacity: formData.title.trim() ? 1 : 0.6,
-              transition: 'all 0.2s ease',
             }}
           >
             Add Task
