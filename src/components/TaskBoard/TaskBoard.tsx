@@ -29,7 +29,7 @@ function TaskBoard({ taskLists = [] }: TaskBoardProps) {
         </button>
       </div>
       <div className="board-columns" role="group" aria-label="Task columns">
-        {taskLists.map(taskList => (
+        {taskLists.filter(t => !t.hidden).map(taskList => (
           <TaskColumn 
             key={taskList.id} 
             taskList={taskList} 

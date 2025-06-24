@@ -5,6 +5,7 @@ export interface TaskList {
   name: string;
   color: string;
   tasks: Task[];
+  hidden?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

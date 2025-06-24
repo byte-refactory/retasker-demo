@@ -3,6 +3,10 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { X } from 'lucide-react';
 import './ManageTaskListsModal.css';
 import '../Modal/ModalShared.css';
+import { useTaskLists } from '../../contexts/TaskListsContext';
+import { ListEdit } from '../ListEdit';
+import { useEffect, useState } from 'react';
+import { getRandomColor } from '../../utils/colorUtils';
 
 interface ManageTaskListsModalProps {
   isOpen: boolean;
@@ -11,6 +15,45 @@ interface ManageTaskListsModalProps {
 
 export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskListsModalProps) {
   const { theme } = useTheme();
+  const { taskLists, updateTaskList, createTaskList, reorderTaskLists } = useTaskLists();
+  const [names, setNames] = useState<string[]>([]);
+  // Only show non-hidden lists
+  const visibleLists = taskLists.filter(l => !(l as any).hidden);
+
+  useEffect(() => {
+    if (isOpen) {
+      setNames(visibleLists.map(l => l.name));
+    }
+  }, [isOpen, taskLists]);
+
+  const handleSave = () => {
+    // Hide lists that are not in the new names
+    taskLists.forEach(list => {
+      if (!names.includes(list.name) && !(list as any).hidden) {
+        updateTaskList(list.id, { hidden: true } as any);
+      }
+    });
+    // Unhide lists that are in the new names but currently hidden
+    taskLists.forEach(list => {
+      if (names.includes(list.name) && (list as any).hidden) {
+        updateTaskList(list.id, { hidden: false } as any);
+      }
+    });
+    
+    // Add new lists for names not in any list
+    names.forEach(name => {
+      if (!taskLists.some(list => list.name === name)) {
+        createTaskList({
+          name,
+          color: getRandomColor(),
+          tasks: [],
+        });
+      }
+    });
+
+    reorderTaskLists(names);
+    onClose();
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -28,12 +71,17 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
             <X size={20} />
           </button>
         </div>
-        <p style={{ color: theme.text.secondary }}>
-          Here you can add, rename, or remove task lists. (Feature coming soon!)
-        </p>
+        <ListEdit
+          values={names}
+          onChange={setNames}
+          placeholder="Task list name"
+        />
         <div className="manage-task-lists-modal-footer">
           <button className="modal-footer-btn" onClick={onClose} style={{ color: theme.text.primary }}>
             Cancel
+          </button>
+          <button className="modal-footer-btn" onClick={handleSave} style={{ color: theme.interactive.primary }}>
+            Save
           </button>
         </div>
       </div>

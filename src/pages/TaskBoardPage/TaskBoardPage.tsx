@@ -13,9 +13,9 @@ function TaskBoardContent() {
     if (!initialized.current && taskLists.length === 0) {
       initialized.current = true;
       // Create default task lists
-      createTaskList({ name: 'To Do', color: '#007bff', tasks: [] });
-      createTaskList({ name: 'In Progress', color: '#28a745', tasks: [] });
-      createTaskList({ name: 'Done', color: '#6c757d', tasks: [] });
+      createTaskList({ name: 'To Do', hidden: false, color: '#007bff', tasks: [] });
+      createTaskList({ name: 'In Progress', hidden: false, color: '#28a745', tasks: [] });
+      createTaskList({ name: 'Done', hidden: false, color: '#6c757d', tasks: [] });
     }
   }, [taskLists, createTaskList]);
 

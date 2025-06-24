@@ -67,3 +67,11 @@ export const colorToRgb = (color: string): { r: number; g: number; b: number } |
     return null;
   }
 };
+
+// Returns a random color from a preset palette
+export const getRandomColor = (): string => {
+  const palette = [
+    '#1976d2', '#388e3c', '#fbc02d', '#d32f2f', '#7b1fa2', '#0288d1', '#c2185b', '#ffa000', '#388e3c', '#455a64'
+  ];
+  return palette[Math.floor(Math.random() * palette.length)];
+};

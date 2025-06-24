@@ -14,6 +14,7 @@ interface TaskListContextType {
   updateTask: (taskListId: string, taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => Task | null;
   deleteTask: (taskListId: string, taskId: string) => boolean;
   moveTask: (sourceListId: string, targetListId: string, taskId: string) => boolean;
+  reorderTaskLists: (orderedNames: string[]) => void;
 }
 
 const TaskListContext = createContext<TaskListContextType | undefined>(undefined);
@@ -46,13 +47,17 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
 
   const updateTaskList = (id: string, updates: Partial<Omit<TaskList, 'id' | 'createdAt'>>) => {
     let updatedTaskList: TaskList | null = null;
-    setTaskLists(prev => prev.map(list => {
-      if (list.id === id) {
-        updatedTaskList = { ...list, ...updates, updatedAt: new Date() };
-        return updatedTaskList;
-      }
-      return list;
-    }));
+    setTaskLists(prev => {
+      const updatedTaskLists = prev.map(list => {
+        if (list.id === id) {
+          updatedTaskList = { ...list, ...updates, updatedAt: new Date() };
+          return updatedTaskList;
+        }
+        return list;
+      });
+      console.log('setTaskLists (updateTaskList):', JSON.stringify(updatedTaskLists));
+      return updatedTaskLists;
+    });
     return updatedTaskList;
   };
 
@@ -70,6 +75,7 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
     });
     return found;
   };
+
   const createTask = (taskListId: string, task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newTask: Task = {
       ...task,
@@ -176,6 +182,17 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
     return found;
   };
 
+  const reorderTaskLists = (orderedNames: string[]) => {
+    setTaskLists(prev => {
+      const visible = prev.filter(l => !l.hidden);
+      const hidden = prev.filter(l => l.hidden);
+      const reordered = orderedNames
+        .map(name => visible.find(l => l.name === name))
+        .filter(Boolean) as TaskList[];
+      return [...reordered, ...hidden];
+    });
+  };
+
   const contextValue: TaskListContextType = {
     taskLists,
     refreshTaskLists,
@@ -186,6 +203,7 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
     updateTask,
     deleteTask,
     moveTask,
+    reorderTaskLists, // add to context
   };
 
   return (

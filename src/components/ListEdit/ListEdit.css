@@ -1,0 +1,26 @@
+.list-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.list-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.list-edit-item-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.list-edit-add-btn {
+  color: #1976d2;
+  align-self: flex-start;
+  margin-top: 4px;
+}
