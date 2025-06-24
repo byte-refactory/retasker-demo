@@ -1,47 +1,22 @@
-import { useEffect} from 'react';
 import TaskBoard from '../../components/TaskBoard';
 import { TaskListProvider, useTaskLists } from '../../contexts/TaskListsContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import './TaskBoardPage.css';
+import { useEffect, useRef } from 'react';
 
 function TaskBoardContent() {
   const { theme } = useTheme();
   const { taskLists, createTaskList } = useTaskLists();
-  // Create default task lists if none exist
+  const initialized = useRef(false);
+
   useEffect(() => {
-    // Only initialize after we've confirmed the context has loaded
-    // Skip if the function isn't available yet
-    if (!createTaskList) {
-      return;
+    if (!initialized.current && taskLists.length === 0) {
+      initialized.current = true;
+      // Create default task lists
+      createTaskList({ name: 'To Do', color: '#007bff', tasks: [] });
+      createTaskList({ name: 'In Progress', color: '#28a745', tasks: [] });
+      createTaskList({ name: 'Done', color: '#6c757d', tasks: [] });
     }
-
-    // Use setTimeout to defer execution until after all synchronous React renders complete
-    // This ensures the context has finished its initial state updates before we check taskLists.length
-    const timer = setTimeout(() => {
-      if (taskLists.length === 0) {
-        
-        // Create default task lists
-        createTaskList({
-          name: 'To Do',
-          color: '#007bff',
-          tasks: []
-        });
-        
-        createTaskList({
-          name: 'In Progress',
-          color: '#28a745',
-          tasks: []
-        });
-        
-        createTaskList({
-          name: 'Done',
-          color: '#6c757d',
-          tasks: []
-        });
-      }
-    }, 1);
-
-    return () => clearTimeout(timer);
   }, [taskLists, createTaskList]);
 
   return (

@@ -23,56 +23,157 @@ interface TaskListProviderProps {
 }
 
 export function TaskListProvider({ children }: TaskListProviderProps) {
-  const [taskLists, setTaskLists] = useState<TaskList[]>([]);
+  const [taskLists, setTaskLists] = useState<TaskList[]>(() => StorageService.getTaskLists());
+
+  // Sync to localStorage whenever taskLists change
+  useEffect(() => {
+    StorageService.saveTaskLists(taskLists);
+  }, [taskLists]);
 
   const refreshTaskLists = () => {
     setTaskLists(StorageService.getTaskLists());
   };
-
-  useEffect(() => {
-    refreshTaskLists();
-  }, []);
-
   const createTaskList = (taskList: Omit<TaskList, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newTaskList = StorageService.createTaskList(taskList);
-    refreshTaskLists();
+    const newTaskList: TaskList = {
+      ...taskList,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setTaskLists(prev => [...prev, newTaskList]);
     return newTaskList;
   };
 
   const updateTaskList = (id: string, updates: Partial<Omit<TaskList, 'id' | 'createdAt'>>) => {
-    const updatedTaskList = StorageService.updateTaskList(id, updates);
-    refreshTaskLists();
+    let updatedTaskList: TaskList | null = null;
+    setTaskLists(prev => prev.map(list => {
+      if (list.id === id) {
+        updatedTaskList = { ...list, ...updates, updatedAt: new Date() };
+        return updatedTaskList;
+      }
+      return list;
+    }));
     return updatedTaskList;
   };
 
   const deleteTaskList = (id: string) => {
-    const success = StorageService.deleteTaskList(id);
-    refreshTaskLists();
-    return success;
+    let found = false;
+    setTaskLists(prev => {
+      const filtered = prev.filter(list => {
+        if (list.id === id) {
+          found = true;
+          return false;
+        }
+        return true;
+      });
+      return filtered;
+    });
+    return found;
   };
-
   const createTask = (taskListId: string, task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newTask = StorageService.createTask(taskListId, task);
-    refreshTaskLists();
-    return newTask;
+    const newTask: Task = {
+      ...task,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    let created = false;
+    setTaskLists(prev => prev.map(list => {
+      if (list.id === taskListId) {
+        created = true;
+        return {
+          ...list,
+          tasks: [...list.tasks, newTask],
+          updatedAt: new Date()
+        };
+      }
+      return list;
+    }));
+    
+    return created ? newTask : null;
   };
 
   const updateTask = (taskListId: string, taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => {
-    const updatedTask = StorageService.updateTask(taskListId, taskId, updates);
-    refreshTaskLists();
+    let updatedTask: Task | null = null;
+    setTaskLists(prev => prev.map(list => {
+      if (list.id === taskListId) {
+        return {
+          ...list,
+          tasks: list.tasks.map(task => {
+            if (task.id === taskId) {
+              updatedTask = { ...task, ...updates, updatedAt: new Date() };
+              return updatedTask;
+            }
+            return task;
+          }),
+          updatedAt: new Date()
+        };
+      }
+      return list;
+    }));
     return updatedTask;
   };
 
   const deleteTask = (taskListId: string, taskId: string) => {
-    const success = StorageService.deleteTask(taskListId, taskId);
-    refreshTaskLists();
-    return success;
+    let found = false;
+    setTaskLists(prev => prev.map(list => {
+      if (list.id === taskListId) {
+        const filteredTasks = list.tasks.filter(task => {
+          if (task.id === taskId) {
+            found = true;
+            return false;
+          }
+          return true;
+        });
+        return {
+          ...list,
+          tasks: filteredTasks,
+          updatedAt: new Date()
+        };
+      }
+      return list;
+    }));
+    return found;
   };
-
   const moveTask = (sourceListId: string, targetListId: string, taskId: string) => {
-    const success = StorageService.moveTask(sourceListId, targetListId, taskId);
-    refreshTaskLists();
-    return success;
+    let taskToMove: Task | null = null;
+    let found = false;
+
+    // First, find and remove the task from source list
+    setTaskLists(prev => {
+      return prev.map(list => {
+        if (list.id === sourceListId) {
+          const taskIndex = list.tasks.findIndex(task => task.id === taskId);
+          if (taskIndex !== -1) {
+            taskToMove = list.tasks[taskIndex];
+            found = true;
+            return {
+              ...list,
+              tasks: list.tasks.filter(task => task.id !== taskId),
+              updatedAt: new Date()
+            };
+          }
+        }
+        return list;
+      });
+    });
+
+    // Then add it to the target list
+    if (found && taskToMove) {
+      setTaskLists(prev => prev.map(list => {
+        if (list.id === targetListId) {
+          return {
+            ...list,
+            tasks: [...list.tasks, { ...taskToMove!, updatedAt: new Date() }],
+            updatedAt: new Date()
+          };
+        }
+        return list;
+      }));
+    }
+
+    return found;
   };
 
   const contextValue: TaskListContextType = {
