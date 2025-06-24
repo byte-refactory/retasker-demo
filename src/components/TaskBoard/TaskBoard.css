@@ -4,12 +4,37 @@
   margin: 0 auto;
 }
 
-.board-title {
-  text-align: center;
-  color: #333;
+.board-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-bottom: 15px;
-  padding-top: 50px;
+  padding-top: 100px;
+}
+
+.board-title {
+  margin: 0px;
   font-size: 2rem;
+  text-align: center;
+}
+
+.board-config-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.board-config-btn:hover,
+.board-config-btn:focus {
+  background: rgba(0,0,0,0.06);
+  outline: none;
 }
 
 .board-columns {

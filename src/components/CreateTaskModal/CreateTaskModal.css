@@ -55,6 +55,7 @@
 
 .create-task-modal-footer {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
 }
 

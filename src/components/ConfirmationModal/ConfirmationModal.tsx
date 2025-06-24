@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import Modal from '../Modal';
 import { useTheme } from '../../contexts/ThemeContext';
 import './ConfirmationModal.css';
+import '../Modal/ModalShared.css';
 
 export interface ConfirmationModalProps {
   isOpen: boolean;
@@ -21,7 +22,6 @@ export default function ConfirmationModal({
   title,
   message,
   confirmText = 'Confirm',
-  cancelText = 'Cancel',
   variant = 'info'
 }: ConfirmationModalProps) {
   const { theme } = useTheme();
@@ -55,9 +55,10 @@ export default function ConfirmationModal({
             {title}
           </h2>
           <button
-            className="confirmation-modal-close-btn"
+            className="modal-x-btn"
             onClick={onClose}
             style={{ color: theme.text.secondary }}
+            aria-label="Close"
           >
             <X size={20} />
           </button>
@@ -69,12 +70,12 @@ export default function ConfirmationModal({
         {/* Footer */}
         <div className="confirmation-modal-footer">
           <button
-            className="confirmation-modal-cancel-btn"
+            className="modal-footer-btn"
             type="button"
             onClick={onClose}
             style={{ color: theme.text.secondary }}
           >
-            {cancelText}
+            Cancel
           </button>
           <button
             className="confirmation-modal-confirm-btn"

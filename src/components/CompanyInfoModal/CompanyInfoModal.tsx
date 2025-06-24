@@ -1,6 +1,7 @@
 import { ExternalLink, X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import './CompanyInfoModal.css';
+import '../Modal/ModalShared.css';
 
 interface CompanyInfoModalProps {
   onClose: () => void;
@@ -17,7 +18,7 @@ export default function CompanyInfoModal({ onClose }: CompanyInfoModalProps) {
           About Byte Refactory
         </h2>
         <button
-          className="company-info-modal-close-btn"
+          className="modal-x-btn"
           onClick={onClose}
           style={{ color: theme.text.secondary }}
           aria-label="Close"
@@ -29,8 +30,8 @@ export default function CompanyInfoModal({ onClose }: CompanyInfoModalProps) {
       {/* Content */}
       <div className="company-info-modal-content">
         <p style={{ color: theme.text.primary, lineHeight: 1.6, margin: '0 0 16px 0' }}>
-          Byte Refactory is a forward-thinking technology company focused on building 
-          innovative software solutions that empower businesses and individuals to 
+          Byte Refactory is a forward-thinking technology company focused on building
+          innovative software solutions that empower businesses and individuals to
           achieve their goals more efficiently.
         </p>
         <div className="company-info-modal-link-row">
@@ -54,20 +55,6 @@ export default function CompanyInfoModal({ onClose }: CompanyInfoModalProps) {
             <ExternalLink size={14} />
           </a>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="company-info-modal-footer">
-        <button
-          onClick={onClose}
-          style={{
-            border: `1px solid ${theme.interactive.primary}`,
-            backgroundColor: theme.interactive.primary,
-            color: '#ffffff',
-          }}
-        >
-          Close
-        </button>
       </div>
     </div>
   );
