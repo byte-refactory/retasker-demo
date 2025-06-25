@@ -24,7 +24,48 @@ interface TaskListProviderProps {
 }
 
 export function TaskListProvider({ children }: TaskListProviderProps) {
-  const [taskLists, setTaskLists] = useState<TaskList[]>(() => StorageService.getTaskLists());
+  const [taskLists, setTaskLists] = useState<TaskList[]>(() => {
+    const storedLists = StorageService.getTaskLists();
+    
+    // If no task lists exist, create default ones
+    if (storedLists.length === 0) {
+      const defaultLists: TaskList[] = [
+        {
+          id: crypto.randomUUID(),
+          name: 'To Do',
+          hidden: false,
+          color: '#007bff',
+          tasks: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'In Progress',
+          hidden: false,
+          color: '#28a745',
+          tasks: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'Done',
+          hidden: false,
+          color: '#6c757d',
+          tasks: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      
+      // Save the default lists immediately
+      StorageService.saveTaskLists(defaultLists);
+      return defaultLists;
+    }
+    
+    return storedLists;
+  });
 
   // Sync to localStorage whenever taskLists change
   useEffect(() => {

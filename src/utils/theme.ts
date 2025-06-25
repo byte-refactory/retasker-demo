@@ -37,6 +37,7 @@ export const lightTheme = {
         background: '#f8f9fa',
         columnBackground: '#eeeeee',
         columnBorder: '#dee2e6',
+        columnDragHoverBackground: '#e9ecef',
     },
 
     // Interactive elements
@@ -109,6 +110,7 @@ export const darkTheme = {
         background: '#1a1a1a',
         columnBackground: '#2d2d2d',
         columnBorder: '#404040',
+        columnDragHoverBackground: '#333333'
     },
 
     // Interactive elements

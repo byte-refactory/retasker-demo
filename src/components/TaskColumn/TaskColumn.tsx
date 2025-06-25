@@ -19,7 +19,7 @@ function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: Ta
   const { theme } = useTheme();
   const createTaskModal = useModal();
 
-  const { dropRef, isOver, dropProps } = useDroppable({
+  const { dropRef, isOver } = useDroppable({
     accept: 'task',
     onDrop: (dragItem) => {
       console.log('Task dropped:', dragItem, 'into list:', taskList.id);
@@ -44,16 +44,14 @@ function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: Ta
   const headerTextColor = getContrastTextColor(taskList.color);
 
   return (
-    <>
-      <section
+    <>      <section
         ref={dropRef}
         className={`column ${isOver ? 'column-drag-over' : ''}`}
         aria-labelledby={`column-${taskList.id}-title`}
         style={{
-          backgroundColor: theme.taskBoard.columnBackground,
+          backgroundColor: isOver ? theme.taskBoard.columnDragHoverBackground : theme.taskBoard.columnBackground,
           borderColor: theme.taskBoard.columnBorder
         }}
-        {...dropProps}
       >
         <div
           className="column-header"

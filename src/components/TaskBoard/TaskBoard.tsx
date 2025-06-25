@@ -1,18 +1,31 @@
-import type { TaskList } from '../../models';
 import TaskColumn from '../TaskColumn';
 import './TaskBoard.css';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTaskLists } from '../../contexts/TaskListsContext';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
 import { useState } from 'react';
 
-interface TaskBoardProps {
-  taskLists?: TaskList[];
-}
-
-function TaskBoard({ taskLists = [] }: TaskBoardProps) {
+function TaskBoard(): React.ReactElement {
   const { theme } = useTheme();
+  const { taskLists, moveTask } = useTaskLists();
   const [isManageModalOpen, setManageModalOpen] = useState(false);
+  const [dragState, setDragState] = useState<{ task: any; sourceListId: string } | null>(null);
+
+  const handleTaskDragStart = (task: any, sourceListId: string) => {
+    setDragState({ task, sourceListId });
+  };
+
+  const handleTaskDragEnd = () => {
+    setDragState(null);
+  };
+
+  const handleTaskDrop = (task: any, targetListId: string) => {
+    if (dragState && dragState.sourceListId !== targetListId) {
+      moveTask(dragState.sourceListId, targetListId, task.id);
+    }
+    setDragState(null);
+  };
 
   return (
     <main className="task-board" role="main">
@@ -27,12 +40,14 @@ function TaskBoard({ taskLists = [] }: TaskBoardProps) {
         >
           <Settings size={22} />
         </button>
-      </div>
-      <div className="board-columns" role="group" aria-label="Task columns">
+      </div>      <div className="board-columns" role="group" aria-label="Task columns">
         {taskLists.filter(t => !t.hidden).map(taskList => (
           <TaskColumn 
             key={taskList.id} 
-            taskList={taskList} 
+            taskList={taskList}
+            onTaskDragStart={handleTaskDragStart}
+            onTaskDragEnd={handleTaskDragEnd}
+            onTaskDrop={handleTaskDrop}
           />
         ))}
       </div>

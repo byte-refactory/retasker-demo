@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 export interface DragItem {
   id: string;
@@ -42,6 +42,18 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
     setIsDragging(true);
     onDragStart?.(item);
 
+    // Store drag data globally for drop detection
+    globalDragState = {
+      ...globalDragState,
+      isDragging: true,
+      dragItem: item,
+      dragOffset: { x: e.clientX - rect.left, y: e.clientY - rect.top },
+      dragPosition: { x: e.clientX, y: e.clientY },
+    };
+    
+    // Notify listeners
+    dragStateListeners.forEach(listener => listener(globalDragState));
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
 
@@ -51,17 +63,44 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       dragRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
       dragRef.current.style.zIndex = '9999';
       dragRef.current.style.pointerEvents = 'none';
+
+      // Update global position
+      globalDragState = {
+        ...globalDragState,
+        dragPosition: { x: e.clientX, y: e.clientY },
+      };
+      dragStateListeners.forEach(listener => listener(globalDragState));
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       if (dragRef.current) {
         dragRef.current.style.transform = '';
         dragRef.current.style.zIndex = '';
         dragRef.current.style.pointerEvents = '';
       }
 
+      // Check if we're over a drop zone
+      const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+      const dropZone = elementBelow?.closest('[data-drop-zone]');
+      
+      if (dropZone && globalDragState.dragItem) {
+        const onDropHandler = (dropZone as any)._onDrop;
+        if (onDropHandler) {
+          onDropHandler(globalDragState.dragItem);
+        }
+      }
+
       setIsDragging(false);
       onDragEnd?.(item);
+
+      // Reset global state
+      globalDragState = {
+        isDragging: false,
+        dragItem: null,
+        dragOffset: { x: 0, y: 0 },
+        dragPosition: { x: 0, y: 0 },
+      };
+      dragStateListeners.forEach(listener => listener(globalDragState));
 
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -89,45 +128,62 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
   const [isOver, setIsOver] = useState(false);
   const dropRef = useRef<HTMLElement>(null);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsOver(true);
-  };
+  useEffect(() => {
+    const element = dropRef.current;
+    if (!element) return;
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!dropRef.current?.contains(e.relatedTarget as Node)) {
-      setIsOver(false);
-      onDragLeave?.();
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsOver(false);
-    
-    try {
-      const dragData = e.dataTransfer.getData('application/json');
-      if (dragData) {
-        const item: DragItem = JSON.parse(dragData);
-        const acceptTypes = Array.isArray(accept) ? accept : [accept];
-        
-        if (acceptTypes.includes(item.type)) {
-          onDrop?.(item, dropRef.current);
-        }
+    // Mark as drop zone
+    element.setAttribute('data-drop-zone', 'true');
+    (element as any)._onDrop = (dragItem: DragItem) => {
+      const acceptTypes = Array.isArray(accept) ? accept : [accept];
+      if (acceptTypes.includes(dragItem.type)) {
+        onDrop?.(dragItem, element);
       }
-    } catch (error) {
-      console.warn('Failed to parse drag data:', error);
-    }
-  };
+    };
+
+    const handleMouseEnter = () => {
+      if (globalDragState.isDragging) {
+        setIsOver(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (globalDragState.isDragging) {
+        setIsOver(false);
+        onDragLeave?.();
+      }
+    };
+
+    element.addEventListener('mouseenter', handleMouseEnter);
+    element.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      element.removeEventListener('mouseenter', handleMouseEnter);
+      element.removeEventListener('mouseleave', handleMouseLeave);
+      element.removeAttribute('data-drop-zone');
+      delete (element as any)._onDrop;
+    };
+  }, [accept, onDrop, onDragLeave]);
+
+  // Listen for global drag state changes to reset isOver when drag ends
+  useEffect(() => {
+    const handleDragStateChange = (state: DragState) => {
+      if (!state.isDragging) {
+        setIsOver(false);
+      }
+    };
+
+    dragStateListeners.add(handleDragStateChange);
+    
+    return () => {
+      dragStateListeners.delete(handleDragStateChange);
+    };
+  }, []);
 
   return {
     dropRef,
     isOver,
-    dropProps: {
-      onDragOver: handleDragOver,
-      onDragLeave: handleDragLeave,
-      onDrop: handleDrop,
-    },
+    dropProps: {},
   };
 }
 
