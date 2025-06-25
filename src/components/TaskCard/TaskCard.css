@@ -6,6 +6,10 @@
   border: 2px dashed;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+  touch-action: none; /* Improve touch interaction */
+  user-select: none; /* Disable text selection */
+  -webkit-user-select: none; /* Disable text selection on iOS */
+  -webkit-touch-callout: none; /* Disable callout on iOS */
 }
 
 .task-card:hover {

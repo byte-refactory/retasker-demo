@@ -15,7 +15,7 @@ interface ManageTaskListsModalProps {
 
 export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskListsModalProps) {
   const { theme } = useTheme();
-  const { taskLists, updateTaskList, createTaskList, reorderTaskLists } = useTaskLists();
+  const { taskLists, updateTaskList, createTaskList, reorderTaskLists, resetToDefaults } = useTaskLists();
   const [names, setNames] = useState<string[]>([]);
   // Only show non-hidden lists
   const visibleLists = taskLists.filter(l => !(l as any).hidden);
@@ -55,6 +55,11 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
     onClose();
   };
 
+  const handleResetToDefaults = () => {
+    resetToDefaults();
+    onClose();
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="manage-task-lists-modal">
@@ -75,14 +80,18 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
           values={names}
           onChange={setNames}
           placeholder="Task list name"
-        />
-        <div className="manage-task-lists-modal-footer">
-          <button className="modal-footer-btn" onClick={onClose} style={{ color: theme.text.primary }}>
-            Cancel
+        />        <div className="manage-task-lists-modal-footer">
+          <button className="modal-footer-btn" onClick={handleResetToDefaults} style={{ color: theme.interactive.warning || '#dc3545' }}>
+            Reset to Defaults
           </button>
-          <button className="modal-footer-btn" onClick={handleSave} style={{ color: theme.interactive.primary }}>
-            Save
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="modal-footer-btn" onClick={onClose} style={{ color: theme.text.primary }}>
+              Cancel
+            </button>
+            <button className="modal-footer-btn" onClick={handleSave} style={{ color: theme.interactive.primary }}>
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </Modal>

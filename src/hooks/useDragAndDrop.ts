@@ -31,12 +31,11 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
   const dragRef = useRef<HTMLDivElement>(null);
   const initialMousePos = useRef({ x: 0, y: 0 });
   const initialElementPos = useRef({ x: 0, y: 0 });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const startDrag = (clientX: number, clientY: number) => {
     if (!dragRef.current) return;
 
     const rect = dragRef.current.getBoundingClientRect();
-    initialMousePos.current = { x: e.clientX, y: e.clientY };
+    initialMousePos.current = { x: clientX, y: clientY };
     initialElementPos.current = { x: rect.left, y: rect.top };
 
     setIsDragging(true);
@@ -47,18 +46,18 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       ...globalDragState,
       isDragging: true,
       dragItem: item,
-      dragOffset: { x: e.clientX - rect.left, y: e.clientY - rect.top },
-      dragPosition: { x: e.clientX, y: e.clientY },
+      dragOffset: { x: clientX - rect.left, y: clientY - rect.top },
+      dragPosition: { x: clientX, y: clientY },
     };
     
     // Notify listeners
     dragStateListeners.forEach(listener => listener(globalDragState));
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
       if (!dragRef.current) return;
 
-      const deltaX = e.clientX - initialMousePos.current.x;
-      const deltaY = e.clientY - initialMousePos.current.y;
+      const deltaX = clientX - initialMousePos.current.x;
+      const deltaY = clientY - initialMousePos.current.y;
 
       dragRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
       dragRef.current.style.zIndex = '9999';
@@ -67,12 +66,12 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       // Update global position
       globalDragState = {
         ...globalDragState,
-        dragPosition: { x: e.clientX, y: e.clientY },
+        dragPosition: { x: clientX, y: clientY },
       };
       dragStateListeners.forEach(listener => listener(globalDragState));
     };
 
-    const handleMouseUp = (e: MouseEvent) => {
+    const endDrag = (clientX: number, clientY: number) => {
       if (dragRef.current) {
         dragRef.current.style.transform = '';
         dragRef.current.style.zIndex = '';
@@ -80,7 +79,7 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       }
 
       // Check if we're over a drop zone
-      const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+      const elementBelow = document.elementFromPoint(clientX, clientY);
       const dropZone = elementBelow?.closest('[data-drop-zone]');
       
       if (dropZone && globalDragState.dragItem) {
@@ -102,23 +101,73 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       };
       dragStateListeners.forEach(listener => listener(globalDragState));
 
+      cleanup();
+    };
+
+    // Mouse event handlers
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      handleMove(e.clientX, e.clientY);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      e.preventDefault();
+      endDrag(e.clientX, e.clientY);
+    };
+
+    // Touch event handlers
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (touch) {
+        handleMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      if (touch) {
+        endDrag(touch.clientX, touch.clientY);
+      }
+    };
+
+    const cleanup = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startDrag(e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (touch) {
+      startDrag(touch.clientX, touch.clientY);
+    }
+  };
   return {
     dragRef,
     isDragging,
     dragProps: {
       onMouseDown: handleMouseDown,
+      onTouchStart: handleTouchStart,
       style: {
         cursor: 'grab',
         userSelect: 'none' as const,
         transition: isDragging ? 'none' : 'transform 0.2s ease',
+        touchAction: 'none', // Prevent default touch behaviors
       },
     },
   };
@@ -139,9 +188,7 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
       if (acceptTypes.includes(dragItem.type)) {
         onDrop?.(dragItem, element);
       }
-    };
-
-    const handleMouseEnter = () => {
+    };    const handleMouseEnter = () => {
       if (globalDragState.isDragging) {
         setIsOver(true);
       }
@@ -154,12 +201,30 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
       }
     };
 
+    // Touch events - we'll use the global drag position to detect when we're over this element
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!globalDragState.isDragging) return;
+      
+      const touch = e.touches[0];
+      if (touch) {
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const isOverThisElement = element.contains(elementBelow);
+        
+        if (isOverThisElement && !isOver) {
+          setIsOver(true);
+        } else if (!isOverThisElement && isOver) {
+          setIsOver(false);
+          onDragLeave?.();
+        }
+      }
+    };
+
     element.addEventListener('mouseenter', handleMouseEnter);
     element.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });    return () => {
       element.removeEventListener('mouseenter', handleMouseEnter);
       element.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('touchmove', handleTouchMove);
       element.removeAttribute('data-drop-zone');
       delete (element as any)._onDrop;
     };
@@ -179,9 +244,8 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
       dragStateListeners.delete(handleDragStateChange);
     };
   }, []);
-
   return {
-    dropRef,
+    dropRef: dropRef as React.RefObject<any>,
     isOver,
     dropProps: {},
   };

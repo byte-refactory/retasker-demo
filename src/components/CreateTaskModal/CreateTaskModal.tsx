@@ -28,7 +28,7 @@ export default function CreateTaskModal({ isOpen, onClose, taskListId, taskListN
                 title: formData.title.trim(),
                 description: formData.description.trim()
             });
-            onClose();
+            handleClose();
         }
     };
 
@@ -36,6 +36,7 @@ export default function CreateTaskModal({ isOpen, onClose, taskListId, taskListN
         setFormData({ title: '', description: '' });
         onClose();
     };
+
     return (
         <Modal isOpen={isOpen} onClose={handleClose} size="medium">
             <div className="create-task-modal">

@@ -40,6 +40,7 @@ function TaskCard({ task, columnColor, onDragStart, onDragEnd }: TaskCardProps) 
         transition: isDragging ? 'none' : 'transform 0.2s ease',
       }}
       onMouseDown={dragProps.onMouseDown}
+      onTouchStart={dragProps.onTouchStart}
     >
       <button 
         className="task-arrow-container"
