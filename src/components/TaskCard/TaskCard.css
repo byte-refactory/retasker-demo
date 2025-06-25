@@ -68,3 +68,18 @@
   font-size: 0.9rem;
   line-height: 1.4;
 }
+
+/* Dragging states */
+.task-card-dragging {
+  transform: rotate(5deg) scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+}
+
+.task-card-dragging .task-arrow-container {
+  opacity: 0 !important;
+}
+
+.task-card-dragging * {
+  pointer-events: none;
+}

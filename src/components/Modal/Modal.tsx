@@ -38,9 +38,7 @@ export default function Modal({
 
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
-    }, [isOpen, closeOnEscape, onClose]);
-
-    // Handle focus management
+    }, [isOpen, closeOnEscape, onClose]);    // Handle focus management
     useEffect(() => {
         if (isOpen) {
             // Store currently focused element
@@ -50,22 +48,12 @@ export default function Modal({
             if (modalRef.current) {
                 modalRef.current.focus();
             }
-
-            // Prevent body scroll
-            document.body.style.overflow = 'hidden';
         } else {
             // Restore focus
             if (previousActiveElement.current) {
                 previousActiveElement.current.focus();
             }
-
-            // Restore body scroll
-            document.body.style.overflow = '';
         }
-
-        return () => {
-            document.body.style.overflow = '';
-        };
     }, [isOpen]);
 
     // Handle overlay click

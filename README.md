@@ -85,3 +85,48 @@ To demonstrate frontend architecture, component design, and state management usi
 
 Early scaffolding — currently setting up layout and task state logic.
 
+## Using the Base Modal Component
+
+The `Modal` component in `src/components/Modal/Modal.tsx` provides a flexible, accessible modal dialog for your app. Use it to create custom modals for forms, confirmations, settings, etc.
+
+### Basic Usage
+
+```tsx
+import Modal from '../components/Modal';
+
+<Modal isOpen={isOpen} onClose={handleClose}>
+  <div>Your modal content here</div>
+</Modal>
+```
+
+### Props
+- `isOpen` (boolean): Whether the modal is visible.
+- `onClose` (function): Called when the modal should close (e.g., overlay click, Escape key).
+- `children` (ReactNode): Modal content.
+- `size` (optional): `'small' | 'medium' | 'large' | 'fullscreen'` (default: `'medium'`).
+- `closeOnEscape` (optional): Close on Escape key (default: `true`).
+- `closeOnOverlayClick` (optional): Close on overlay click (default: `true`).
+- `className` (optional): Extra CSS classes for the modal container.
+
+### Example: Custom Modal
+```tsx
+<Modal isOpen={isOpen} onClose={onClose} size="large">
+  <div style={{ padding: 24 }}>
+    <h2>My Modal</h2>
+    <p>Put any content here.</p>
+    <button onClick={onClose}>Close</button>
+  </div>
+</Modal>
+```
+
+### Accessibility
+- The modal traps focus and restores it on close.
+- The overlay is keyboard and screen reader accessible.
+- Use semantic HTML inside the modal for best results.
+
+### Styling
+- The modal uses theme colors automatically.
+- You can add custom styles via the `className` prop or by styling your content.
+
+---
+

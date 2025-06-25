@@ -1,6 +1,5 @@
 import { useTheme } from '../../contexts/ThemeContext';
 import useModal from '../../hooks/useModal';
-import Modal from '../Modal';
 import CompanyInfoModal from '../CompanyInfoModal';
 import lightLogo from '../../assets/Wide-NoBackground-Light.png';
 import darkLogo from '../../assets/Wide-NoBackground-Dark.png';
@@ -59,13 +58,7 @@ function Logo({ className = '' }: LogoProps) {
             </div>
 
             {/* Company Info Modal */}
-            <Modal
-                isOpen={companyModal.isOpen}
-                onClose={companyModal.close}
-                size="medium"
-            >
-                <CompanyInfoModal onClose={companyModal.close} />
-            </Modal>
+            <CompanyInfoModal isOpen={companyModal.isOpen} onClose={companyModal.close} />
         </>
     );
 }
