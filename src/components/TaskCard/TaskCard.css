@@ -1,6 +1,6 @@
 .task-card {
   background: white;
-  padding: 16px;
+  padding: 12px; /* Reduced from 16px for more compact layout */
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 2px dashed;
@@ -17,60 +17,19 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.task-arrow-container {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.task-arrow {
-  color: #666;
-}
-
-.task-arrow-right {
-  display: block;
-}
-
-.task-arrow-down {
-  display: none;
-}
-
-.task-card:hover .task-arrow-container {
-  opacity: 1;
-}
-
-/* Show down arrow instead of right arrow on narrow screens */
-@media (max-width: 806px) {
-  .task-arrow-right {
-    display: none;
-  }
-  
-  .task-arrow-down {
-    display: block;
-  }
-}
-
 .task-title {
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0; /* Reduced from 8px */
   color: #333;
-  font-size: 1rem;
+  font-size: 0.95rem; /* Slightly smaller for compactness */
   font-weight: 600;
+  line-height: 1.3; /* More compact line height */
 }
 
 .task-description {
   margin: 0;
   color: #666;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.85rem; /* Reduced from 0.9rem */
+  line-height: 1.3; /* Reduced from 1.4 for compactness */
 }
 
 /* Dragging states */
@@ -78,10 +37,6 @@
   transform: rotate(5deg) scale(1.05);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
   z-index: 9999;
-}
-
-.task-card-dragging .task-arrow-container {
-  opacity: 0 !important;
 }
 
 .task-card-dragging * {

@@ -31,15 +31,18 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
   const dragRef = useRef<HTMLDivElement>(null);
   const initialMousePos = useRef({ x: 0, y: 0 });
   const initialElementPos = useRef({ x: 0, y: 0 });
-  const startDrag = (clientX: number, clientY: number) => {
+  const initialScrollPos = useRef({ x: 0, y: 0 });
+  const autoScrollRef = useRef<number | null>(null);
+  const currentMousePos = useRef({ x: 0, y: 0 });  const startDrag = (clientX: number, clientY: number) => {
     if (!dragRef.current) return;
 
     const rect = dragRef.current.getBoundingClientRect();
     initialMousePos.current = { x: clientX, y: clientY };
     initialElementPos.current = { x: rect.left, y: rect.top };
+    initialScrollPos.current = { x: window.scrollX, y: window.scrollY };
 
     setIsDragging(true);
-    onDragStart?.(item);    // Store drag data globally for drop detection
+    onDragStart?.(item);// Store drag data globally for drop detection
     globalDragState = {
       ...globalDragState,
       isDragging: true,
@@ -47,17 +50,61 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       dragOffset: { x: clientX - rect.left, y: clientY - rect.top },
       dragPosition: { x: clientX, y: clientY },
     };
-    
-    // Notify listeners
-    dragStateListeners.forEach(listener => listener(globalDragState));
-
-    const handleMove = (clientX: number, clientY: number) => {
+      // Notify listeners
+    dragStateListeners.forEach(listener => listener(globalDragState));    // Auto-scroll animation function
+    const autoScroll = () => {
+      const { y: clientY } = currentMousePos.current;
+      const scrollThreshold = 80;
+      const maxScrollSpeed = 12;
+      const viewportHeight = window.innerHeight;
+      
+      let scrollAmount = 0;
+      
+      // Calculate scroll direction and speed based on mouse position
+      if (clientY > viewportHeight - scrollThreshold) {
+        // Near bottom - scroll down
+        const intensity = (clientY - (viewportHeight - scrollThreshold)) / scrollThreshold;
+        scrollAmount = Math.min(maxScrollSpeed, intensity * maxScrollSpeed);
+      } else if (clientY < scrollThreshold) {
+        // Near top - scroll up
+        const intensity = (scrollThreshold - clientY) / scrollThreshold;
+        scrollAmount = -Math.min(maxScrollSpeed, intensity * maxScrollSpeed);
+      }
+      
+      if (scrollAmount !== 0) {
+        window.scrollBy(0, scrollAmount);
+        autoScrollRef.current = requestAnimationFrame(autoScroll);
+      } else {
+        autoScrollRef.current = null;
+      }
+    };    const handleMove = (clientX: number, clientY: number) => {
       if (!dragRef.current) return;
 
+      // Update current mouse position for auto-scroll
+      currentMousePos.current = { x: clientX, y: clientY };
+
       const deltaX = clientX - initialMousePos.current.x;
-      const deltaY = clientY - initialMousePos.current.y;      dragRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+      const deltaY = clientY - initialMousePos.current.y;
+      
+      // Account for scroll offset changes during drag
+      const currentScrollX = window.scrollX;
+      const currentScrollY = window.scrollY;
+      const scrollDeltaX = currentScrollX - initialScrollPos.current.x;
+      const scrollDeltaY = currentScrollY - initialScrollPos.current.y;
+
+      dragRef.current.style.transform = `translate(${deltaX + scrollDeltaX}px, ${deltaY + scrollDeltaY}px)`;
       dragRef.current.style.zIndex = '9999';
       dragRef.current.style.pointerEvents = 'none';
+
+      // Start auto-scroll if not already running
+      if (!autoScrollRef.current) {
+        const scrollThreshold = 80;
+        const viewportHeight = window.innerHeight;
+        
+        if (clientY > viewportHeight - scrollThreshold || clientY < scrollThreshold) {
+          autoScrollRef.current = requestAnimationFrame(autoScroll);
+        }
+      }
 
       // Update global position
       globalDragState = {
@@ -65,9 +112,13 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
         dragPosition: { x: clientX, y: clientY },
       };
       dragStateListeners.forEach(listener => listener(globalDragState));
-    };
+    };    const endDrag = (clientX: number, clientY: number) => {
+      // Stop auto-scroll
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
+        autoScrollRef.current = null;
+      }
 
-    const endDrag = (clientX: number, clientY: number) => {
       if (dragRef.current) {
         dragRef.current.style.transform = '';
         dragRef.current.style.zIndex = '';
@@ -125,9 +176,13 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       if (touch) {
         endDrag(touch.clientX, touch.clientY);
       }
-    };
-
-    const cleanup = () => {
+    };    const cleanup = () => {
+      // Stop auto-scroll if running
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
+        autoScrollRef.current = null;
+      }
+      
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleTouchMove);
