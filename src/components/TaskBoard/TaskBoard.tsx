@@ -4,6 +4,7 @@ import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
 import './TaskBoard.css';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
+import { calculateInsertionIndex } from '../../hooks/useDragAndDrop';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
 import { useState } from 'react';
@@ -11,7 +12,7 @@ import type { Task } from '../../models';
 
 function TaskBoard(): React.ReactElement {
   const { theme } = useTheme();
-  const { taskLists, moveTask, deleteTask } = useTaskLists();
+  const { taskLists, moveTaskToPosition, deleteTask } = useTaskLists();
   const [isManageModalOpen, setManageModalOpen] = useState(false);
   const [dragState, setDragState] = useState<{ task: Task; sourceListId: string } | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -31,12 +32,22 @@ function TaskBoard(): React.ReactElement {
 
   const handleTaskDragEnd = () => {
     setDragState(null);
-  };
-
-  const handleTaskDrop = (task: Task, targetListId: string) => {
-    if (dragState && dragState.sourceListId !== targetListId) {
-      moveTask(dragState.sourceListId, targetListId, task.id);
+  };  const handleTaskDrop = (task: Task, targetListId: string, mouseY?: number) => {
+    if (!dragState) return;
+    
+    // Calculate insertion index if mouseY is provided
+    let insertionIndex = 0;
+    if (typeof mouseY === 'number') {
+      insertionIndex = calculateInsertionIndex(mouseY, targetListId);
+    } else {
+      // Fallback: insert at end
+      const targetList = taskLists.find(list => list.id === targetListId);
+      insertionIndex = targetList ? targetList.tasks.length : 0;
     }
+    
+    // Move the task to the calculated position
+    moveTaskToPosition(dragState.sourceListId, targetListId, task.id, insertionIndex);
+    
     setDragState(null);
   };
 

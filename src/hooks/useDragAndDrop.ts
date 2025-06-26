@@ -21,7 +21,7 @@ export interface UseDraggableOptions {
 
 export interface UseDroppableOptions {
   accept: string | string[];
-  onDrop?: (item: DragItem, dropTarget: any) => void;
+  onDrop?: (item: DragItem, dropTarget: any, mousePosition?: { x: number; y: number }) => void;
   onDragOver?: (item: DragItem) => void;
   onDragLeave?: () => void;
 }
@@ -39,9 +39,7 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
     initialElementPos.current = { x: rect.left, y: rect.top };
 
     setIsDragging(true);
-    onDragStart?.(item);
-
-    // Store drag data globally for drop detection
+    onDragStart?.(item);    // Store drag data globally for drop detection
     globalDragState = {
       ...globalDragState,
       isDragging: true,
@@ -57,9 +55,7 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       if (!dragRef.current) return;
 
       const deltaX = clientX - initialMousePos.current.x;
-      const deltaY = clientY - initialMousePos.current.y;
-
-      dragRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+      const deltaY = clientY - initialMousePos.current.y;      dragRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
       dragRef.current.style.zIndex = '9999';
       dragRef.current.style.pointerEvents = 'none';
 
@@ -81,11 +77,10 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       // Check if we're over a drop zone
       const elementBelow = document.elementFromPoint(clientX, clientY);
       const dropZone = elementBelow?.closest('[data-drop-zone]');
-      
-      if (dropZone && globalDragState.dragItem) {
+        if (dropZone && globalDragState.dragItem) {
         const onDropHandler = (dropZone as any)._onDrop;
         if (onDropHandler) {
-          onDropHandler(globalDragState.dragItem);
+          onDropHandler(globalDragState.dragItem, { x: clientX, y: clientY });
         }
       }
 
@@ -179,16 +174,14 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
 
   useEffect(() => {
     const element = dropRef.current;
-    if (!element) return;
-
-    // Mark as drop zone
+    if (!element) return;    // Mark as drop zone
     element.setAttribute('data-drop-zone', 'true');
-    (element as any)._onDrop = (dragItem: DragItem) => {
+    (element as any)._onDrop = (dragItem: DragItem, mousePosition?: { x: number; y: number }) => {
       const acceptTypes = Array.isArray(accept) ? accept : [accept];
       if (acceptTypes.includes(dragItem.type)) {
-        onDrop?.(dragItem, element);
+        onDrop?.(dragItem, element, mousePosition);
       }
-    };    const handleMouseEnter = () => {
+    };const handleMouseEnter = () => {
       if (globalDragState.isDragging) {
         setIsOver(true);
       }
@@ -261,22 +254,32 @@ let globalDragState: DragState = {
 
 const dragStateListeners = new Set<(state: DragState) => void>();
 
-export function useDragState() {
-  const [state] = useState(globalDragState);
-
-  const subscribe = (listener: (state: DragState) => void) => {
-    dragStateListeners.add(listener);
-    return () => dragStateListeners.delete(listener);
-  };
-
-  const updateDragState = (newState: Partial<DragState>) => {
-    globalDragState = { ...globalDragState, ...newState };
-    dragStateListeners.forEach(listener => listener(globalDragState));
-  };
-
-  return {
-    state,
-    updateDragState,
-    subscribe,
-  };
+// Utility to calculate where to insert a task based on mouse Y position
+export function calculateInsertionIndex(mouseY: number, columnId: string): number {
+  const columnElement = document.querySelector(`[data-task-column][data-column-id="${columnId}"]`);
+  if (!columnElement) return 0;
+  
+  const taskElements = Array.from(
+    columnElement.querySelectorAll('[data-task-card]')
+  ) as HTMLElement[];
+  
+  if (taskElements.length === 0) return 0;
+  
+  // Find the insertion point by comparing mouse Y with task positions
+  for (let i = 0; i < taskElements.length; i++) {
+    const rect = taskElements[i].getBoundingClientRect();
+    const taskCenterY = rect.top + rect.height / 2;
+    
+    // If mouse is above the center of this task, insert before it
+    if (mouseY < taskCenterY) {
+      return i;
+    }
+  }
+  
+  // If we got here, insert at the end
+  return taskElements.length;
 }
+
+
+
+

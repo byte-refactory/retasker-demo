@@ -14,6 +14,7 @@ interface TaskListContextType {
     updateTask: (taskListId: string, taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => Task | null;
     deleteTask: (taskListId: string, taskId: string) => boolean;
     moveTask: (sourceListId: string, targetListId: string, taskId: string) => boolean;
+    moveTaskToPosition: (sourceListId: string, targetListId: string, taskId: string, position: number) => boolean;
     reorderTaskLists: (orderedNames: string[]) => void;
     resetToDefaults: () => void;
 }
@@ -196,6 +197,51 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
         return found;
     };
 
+    const moveTaskToPosition = (sourceListId: string, targetListId: string, taskId: string, position: number) => {
+        let taskToMove: Task | null = null;
+        let found = false;
+        
+        setTaskLists(prev => {
+            let updated = prev.map(list => {
+                if (list.id === sourceListId) {
+                    const taskIndex = list.tasks.findIndex(task => task.id === taskId);
+                    if (taskIndex !== -1) {
+                        taskToMove = list.tasks[taskIndex];
+                        found = true;
+                        return {
+                            ...list,
+                            tasks: list.tasks.filter(task => task.id !== taskId),
+                            updatedAt: new Date()
+                        };
+                    }
+                }
+                return list;
+            });
+            
+            // Then add it to the target list at the specified position
+            if (found && taskToMove) {
+                updated = updated.map(list => {
+                    if (list.id === targetListId) {
+                        const newTasks = [...list.tasks];
+                        // Ensure position is within bounds
+                        const insertAt = Math.max(0, Math.min(position, newTasks.length));
+                        newTasks.splice(insertAt, 0, { ...taskToMove!, updatedAt: new Date() });
+                        return {
+                            ...list,
+                            tasks: newTasks,
+                            updatedAt: new Date()
+                        };
+                    }
+                    return list;
+                });
+            }
+            
+            return updated;
+        });
+        
+        return found;
+    };
+
     const reorderTaskLists = (orderedNames: string[]) => {
         setTaskLists(prev => {
             const visible = prev.filter(l => !l.hidden);
@@ -257,6 +303,7 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
         updateTask,
         deleteTask,
         moveTask,
+        moveTaskToPosition,
         reorderTaskLists, // add to context
         resetToDefaults,
     };

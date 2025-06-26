@@ -1,4 +1,3 @@
-import { ArrowRight, ArrowDown } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useDraggable } from '../../hooks';
 import type { Task } from '../../models';
@@ -12,9 +11,7 @@ interface TaskCardProps {
 }
 
 function TaskCard({ task, columnColor, onDragStart, onDragEnd }: TaskCardProps) {
-  const { theme } = useTheme();
-  
-  const { dragRef, isDragging, dragProps } = useDraggable({
+  const { theme } = useTheme();  const { dragRef, isDragging, dragProps } = useDraggable({
     item: {
       id: task.id,
       type: 'task',
@@ -23,13 +20,15 @@ function TaskCard({ task, columnColor, onDragStart, onDragEnd }: TaskCardProps) 
     onDragStart: () => onDragStart?.(task),
     onDragEnd: () => onDragEnd?.(task),
   });
-  return (
-    <div 
+
+  return (<div 
       ref={dragRef}
       className={`task-card ${isDragging ? 'task-card-dragging' : ''}`}
       role="article"
       aria-labelledby={`task-${task.id}-title`}
       aria-describedby={`task-${task.id}-description`}
+      data-task-card="true"
+      data-task-id={task.id}
       style={{ 
         borderColor: columnColor || theme.taskCard.border,
         backgroundColor: theme.taskCard.background,
@@ -37,31 +36,9 @@ function TaskCard({ task, columnColor, onDragStart, onDragEnd }: TaskCardProps) 
         opacity: isDragging ? 0.8 : 1,
         cursor: 'grab',
         userSelect: 'none',
-        transition: isDragging ? 'none' : 'transform 0.2s ease',
-      }}
-      onMouseDown={dragProps.onMouseDown}
+        transition: isDragging ? 'none' : 'transform 0.2s ease',      }}      onMouseDown={dragProps.onMouseDown}
       onTouchStart={dragProps.onTouchStart}
     >
-      <button 
-        className="task-arrow-container"
-        aria-label="Move task to next column"
-        type="button"
-      >
-        <ArrowRight 
-          className="task-arrow task-arrow-right" 
-          size={16} 
-          strokeWidth={3}
-          color={theme.icon.primary}
-          aria-hidden="true"
-        />
-        <ArrowDown 
-          className="task-arrow task-arrow-down" 
-          size={16} 
-          strokeWidth={3}
-          color={theme.icon.primary}
-          aria-hidden="true"
-        />
-      </button>
       <h4 
         id={`task-${task.id}-title`}
         className="task-title" 
