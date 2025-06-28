@@ -1,29 +1,18 @@
 import { useTheme } from '../../contexts/ThemeContext';
-import { useDraggable } from '../../hooks';
 import type { Task } from '../../models';
 import './TaskCard.css';
 
 interface TaskCardProps {
   task: Task;
   columnColor?: string; // Optional prop for column color
-  onDragStart?: (task: Task) => void;
-  onDragEnd?: (task: Task) => void;
 }
 
-function TaskCard({ task, columnColor, onDragStart, onDragEnd }: TaskCardProps) {
-  const { theme } = useTheme();  const { dragRef, isDragging, dragProps } = useDraggable({
-    item: {
-      id: task.id,
-      type: 'task',
-      data: task,
-    },
-    onDragStart: () => onDragStart?.(task),
-    onDragEnd: () => onDragEnd?.(task),
-  });
+function TaskCard({ task, columnColor }: TaskCardProps) {
+  const { theme } = useTheme();
 
-  return (<div 
-      ref={dragRef}
-      className={`task-card ${isDragging ? 'task-card-dragging' : ''}`}
+  return (
+    <div 
+      className="task-card"
       role="article"
       aria-labelledby={`task-${task.id}-title`}
       aria-describedby={`task-${task.id}-description`}
@@ -33,11 +22,9 @@ function TaskCard({ task, columnColor, onDragStart, onDragEnd }: TaskCardProps) 
         borderColor: columnColor || theme.taskCard.border,
         backgroundColor: theme.taskCard.background,
         boxShadow: `0 2px 4px ${theme.taskCard.shadow}`,
-        opacity: isDragging ? 0.8 : 1,
-        cursor: 'grab',
+        cursor: 'default',
         userSelect: 'none',
-        transition: isDragging ? 'none' : 'transform 0.2s ease',      }}      onMouseDown={dragProps.onMouseDown}
-      onTouchStart={dragProps.onTouchStart}
+      }}
     >
       <h4 
         id={`task-${task.id}-title`}

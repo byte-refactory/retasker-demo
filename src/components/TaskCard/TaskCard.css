@@ -1,15 +1,11 @@
 .task-card {
   background: white;
-  padding: 12px; /* Reduced from 16px for more compact layout */
+  padding: 12px;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 2px dashed;
+  border: 2px solid;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
-  touch-action: none; /* Improve touch interaction */
-  user-select: none; /* Disable text selection */
-  -webkit-user-select: none; /* Disable text selection on iOS */
-  -webkit-touch-callout: none; /* Disable callout on iOS */
 }
 
 .task-card:hover {
@@ -18,27 +14,16 @@
 }
 
 .task-title {
-  margin: 0 0 6px 0; /* Reduced from 8px */
+  margin: 0 0 6px 0;
   color: #333;
-  font-size: 0.95rem; /* Slightly smaller for compactness */
+  font-size: 0.95rem;
   font-weight: 600;
-  line-height: 1.3; /* More compact line height */
+  line-height: 1.3;
 }
 
 .task-description {
   margin: 0;
   color: #666;
-  font-size: 0.85rem; /* Reduced from 0.9rem */
-  line-height: 1.3; /* Reduced from 1.4 for compactness */
-}
-
-/* Dragging states */
-.task-card-dragging {
-  transform: rotate(5deg) scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-  z-index: 9999;
-}
-
-.task-card-dragging * {
-  pointer-events: none;
+  font-size: 0.85rem;
+  line-height: 1.3;
 }

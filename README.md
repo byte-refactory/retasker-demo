@@ -1,132 +1,184 @@
-# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
-
 # Retasker Demo
 
-A front-end-only React + TypeScript demo project built with Vite, designed to showcase modern React development practices without a backend.
+A modern, clean task board application built with React, TypeScript, and Vite. This is a frontend-only demo that showcases modern React development practices with persistent local storage.
 
-## Purpose
+## Features
 
-To demonstrate frontend architecture, component design, and state management using:
-- React with functional components
+✅ **Task Management**
+- Create tasks with title and description
+- Organize tasks in customizable columns (To Do, In Progress, Done)
+- Delete tasks with confirmation modal
+- Edit task lists and columns
+
+✅ **Modern UI/UX**
+- Clean, responsive design with hover effects
+- Dark/Light theme toggle
+- Accessible components with ARIA labels
+- Mobile-friendly responsive layout
+
+✅ **Persistence**
+- All data stored in localStorage
+- No backend required - perfect for demos
+- Data persists across browser sessions
+
+✅ **Developer Experience**
 - TypeScript for type safety
-- `useReducer` and `useEffect` for local state management
-- `localStorage` for persistence (no server required)
-
-## Key Features (Planned)
-
-- Taskboard UI with columns (e.g. To Do, In Progress, Done)
-- Task creation and movement between columns
-- State stored in `localStorage` for demo-friendly persistence
-- Clean, modular component structure
-- Optional: filtering, drag-and-drop, and theming
+- Modern React with hooks and context
+- Component-based architecture
+- Hot module reloading with Vite
 
 ## Tech Stack
 
-- React 18
-- TypeScript
-- Vite
-- CSS Modules or basic CSS (no framework)
-- GitHub Pages deployment (planned)
+- **React 18** - Modern React with functional components and hooks
+- **TypeScript** - Full type safety throughout the application
+- **Vite** - Fast development server and build tool
+- **CSS3** - Modern CSS with custom properties for theming
+- **Lucide React** - Beautiful, consistent icons
 
-## Status
+## Getting Started
 
-Early scaffolding — currently setting up layout and task state logic.
+### Prerequisites
+- Node.js 16+ 
+- npm or yarn
 
-## Using the Base Modal Component
+### Installation
 
-The `Modal` component in `src/components/Modal/Modal.tsx` provides a flexible, accessible modal dialog for your app. Use it to create custom modals for forms, confirmations, settings, etc.
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd retasker-demo
+```
 
-### Basic Usage
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Start the development server
+```bash
+npm run dev
+```
+
+4. Open your browser to `http://localhost:5173`
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory.
+
+## Project Structure
+
+```
+src/
+├── components/         # Reusable UI components
+│   ├── Attribution/   # App attribution
+│   ├── Modal/         # Base modal component
+│   ├── TaskBoard/     # Main task board
+│   ├── TaskCard/      # Individual task cards
+│   ├── TaskColumn/    # Task list columns
+│   ├── ThemeToggle/   # Dark/light theme toggle
+│   └── ...
+├── contexts/          # React context providers
+│   ├── TaskListsContext.tsx  # Task data management
+│   └── ThemeContext.tsx      # Theme state
+├── hooks/             # Custom React hooks
+├── models/            # TypeScript type definitions
+├── pages/             # Page components
+├── utils/             # Utility functions
+└── test/              # Test files
+```
+
+## Component Architecture
+
+### Modal System
+The app includes a flexible, accessible modal system:
 
 ```tsx
 import Modal from '../components/Modal';
 
-<Modal isOpen={isOpen} onClose={handleClose}>
+<Modal isOpen={isOpen} onClose={handleClose} size="medium">
   <div>Your modal content here</div>
 </Modal>
 ```
 
-### Props
-- `isOpen` (boolean): Whether the modal is visible.
-- `onClose` (function): Called when the modal should close (e.g., overlay click, Escape key).
-- `children` (ReactNode): Modal content.
-- `size` (optional): `'small' | 'medium' | 'large' | 'fullscreen'` (default: `'medium'`).
-- `closeOnEscape` (optional): Close on Escape key (default: `true`).
-- `closeOnOverlayClick` (optional): Close on overlay click (default: `true`).
-- `className` (optional): Extra CSS classes for the modal container.
+**Props:**
+- `isOpen` (boolean): Whether the modal is visible
+- `onClose` (function): Called when modal should close
+- `children` (ReactNode): Modal content
+- `size` (optional): `'small' | 'medium' | 'large' | 'fullscreen'`
+- `closeOnEscape` (optional): Close on Escape key (default: true)
+- `closeOnOverlayClick` (optional): Close on overlay click (default: true)
 
-### Example: Custom Modal
+### Theme System
+The app supports light and dark themes with a context-based system:
+
 ```tsx
-<Modal isOpen={isOpen} onClose={onClose} size="large">
-  <div style={{ padding: 24 }}>
-    <h2>My Modal</h2>
-    <p>Put any content here.</p>
-    <button onClick={onClose}>Close</button>
-  </div>
-</Modal>
+import { useTheme } from '../contexts/ThemeContext';
+
+function MyComponent() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    <div style={{ backgroundColor: theme.background.primary }}>
+      Content
+    </div>
+  );
+}
 ```
 
-### Accessibility
-- The modal traps focus and restores it on close.
-- The overlay is keyboard and screen reader accessible.
-- Use semantic HTML inside the modal for best results.
+### Task Management
+Tasks are managed through a context provider with localStorage persistence:
 
-### Styling
-- The modal uses theme colors automatically.
-- You can add custom styles via the `className` prop or by styling your content.
+```tsx
+import { useTaskLists } from '../contexts/TaskListsContext';
+
+function MyComponent() {
+  const { taskLists, createTask, deleteTask, moveTask } = useTaskLists();
+  // Use the task management functions
+}
+```
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
+
+### Code Style
+
+The project uses:
+- ESLint for code linting
+- TypeScript strict mode
+- Consistent naming conventions
+- Component-based architecture
+
+## Accessibility
+
+The application follows accessibility best practices:
+- Semantic HTML structure
+- ARIA labels and roles
+- Keyboard navigation support
+- Focus management in modals
+- High contrast theme support
+
+## Browser Support
+
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- ES2020+ support required
+- Local storage support required
+
+## License
+
+This project is for demonstration purposes.
 
 ---
+
+**Note:** This is a frontend-only demo application. All data is stored locally in the browser's localStorage and will persist across sessions but only on the same device/browser.
 

@@ -1,10 +1,8 @@
 import TaskColumn from '../TaskColumn';
-import TrashDropZone from '../TrashDropZone';
 import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
 import './TaskBoard.css';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
-import { calculateInsertionIndex } from '../../hooks/useDragAndDrop';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
 import { useState } from 'react';
@@ -12,9 +10,8 @@ import type { Task } from '../../models';
 
 function TaskBoard(): React.ReactElement {
   const { theme } = useTheme();
-  const { taskLists, moveTaskToPosition, deleteTask } = useTaskLists();
+  const { taskLists, deleteTask } = useTaskLists();
   const [isManageModalOpen, setManageModalOpen] = useState(false);
-  const [dragState, setDragState] = useState<{ task: Task; sourceListId: string } | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     task: Task | null;
@@ -26,47 +23,6 @@ function TaskBoard(): React.ReactElement {
     sourceListId: '',
     taskListName: '',
   });
-  const handleTaskDragStart = (task: Task, sourceListId: string) => {
-    setDragState({ task, sourceListId });
-  };
-
-  const handleTaskDragEnd = () => {
-    setDragState(null);
-  };  const handleTaskDrop = (task: Task, targetListId: string, mouseY?: number) => {
-    if (!dragState) return;
-    
-    // Calculate insertion index if mouseY is provided
-    let insertionIndex = 0;
-    if (typeof mouseY === 'number') {
-      insertionIndex = calculateInsertionIndex(mouseY, targetListId);
-    } else {
-      // Fallback: insert at end
-      const targetList = taskLists.find(list => list.id === targetListId);
-      insertionIndex = targetList ? targetList.tasks.length : 0;
-    }
-    
-    // Move the task to the calculated position
-    moveTaskToPosition(dragState.sourceListId, targetListId, task.id, insertionIndex);
-    
-    setDragState(null);
-  };
-
-  const handleTrashDrop = (task: Task) => {
-    if (!dragState) return;
-    
-    const sourceList = taskLists.find(list => list.id === dragState.sourceListId);
-    if (!sourceList) return;
-
-    setDeleteConfirmation({
-      isOpen: true,
-      task: task,
-      sourceListId: dragState.sourceListId,
-      taskListName: sourceList.name,
-    });
-    
-    // Hide the dragging task immediately
-    setDragState(null);
-  };
 
   const handleDeleteConfirm = () => {
     if (deleteConfirmation.task && deleteConfirmation.sourceListId) {
@@ -88,14 +44,9 @@ function TaskBoard(): React.ReactElement {
       taskListName: '',
     });
   };
+
   return (
     <main className="task-board" role="main">
-      {/* Trash Drop Zone - only visible during drag */}
-      <TrashDropZone 
-        isVisible={!!dragState} 
-        onDrop={handleTrashDrop}
-      />
-
       <div className="board-title-row">
         <h2 className="board-title" style={{ color: theme.text.primary }}>Task Board</h2>
         <button
@@ -114,9 +65,6 @@ function TaskBoard(): React.ReactElement {
           <TaskColumn 
             key={taskList.id} 
             taskList={taskList}
-            onTaskDragStart={handleTaskDragStart}
-            onTaskDragEnd={handleTaskDragEnd}
-            onTaskDrop={handleTaskDrop}
           />
         ))}
       </div>

@@ -1,7 +1,6 @@
 import { Plus } from 'lucide-react';
 import type { TaskList } from '../../models';
 import { getContrastTextColor } from '../../utils';
-import { useDroppable } from '../../hooks';
 import TaskCard from '../TaskCard';
 import CreateTaskModal from '../CreateTaskModal';
 import useModal from '../../hooks/useModal';
@@ -10,44 +9,29 @@ import './TaskColumn.css';
 
 interface TaskColumnProps {
   taskList: TaskList;
-  onTaskDragStart?: (task: any, sourceListId: string) => void;
-  onTaskDragEnd?: (task: any) => void;
-  onTaskDrop?: (task: any, targetListId: string, mouseY?: number) => void;
 }
 
-function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: TaskColumnProps) {
+function TaskColumn({ taskList }: TaskColumnProps) {
   const { theme } = useTheme();
-  const createTaskModal = useModal(); const { dropRef, isOver } = useDroppable({
-    accept: 'task',
-    onDrop: (dragItem, _dropTarget, mousePosition) => {
-      onTaskDrop?.(dragItem.data, taskList.id, mousePosition?.y);
-    },
-  });
+  const createTaskModal = useModal();
 
   const handleAddTask = () => {
     createTaskModal.open();
-  };
-  const handleTaskDragStart = (task: any) => {
-    onTaskDragStart?.(task, taskList.id);
-  };
-
-  const handleTaskDragEnd = (task: any) => {
-    onTaskDragEnd?.(task);
   };
 
   const headerTextColor = getContrastTextColor(taskList.color);
 
   return (
-    <>      <section
-      ref={dropRef}
-      className={`column ${isOver ? 'column-drag-over' : ''}`}
-      aria-labelledby={`column-${taskList.id}-title`}
-      data-task-column="true"
-      data-column-id={taskList.id}
-      style={{
-        backgroundColor: isOver ? theme.taskBoard.columnDragHoverBackground : theme.taskBoard.columnBackground,
-        borderColor: theme.taskBoard.columnBorder
-      }}
+    <>
+      <section
+        className="column"
+        aria-labelledby={`column-${taskList.id}-title`}
+        data-task-column="true"
+        data-column-id={taskList.id}
+        style={{
+          backgroundColor: theme.taskBoard.columnBackground,
+          borderColor: theme.taskBoard.columnBorder
+        }}
     >
       <div
         className="column-header"
@@ -84,8 +68,6 @@ function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: Ta
               key={task.id}
               task={task}
               columnColor={taskList.color}
-              onDragStart={handleTaskDragStart}
-              onDragEnd={handleTaskDragEnd}
             />
           ))
         ) : (
