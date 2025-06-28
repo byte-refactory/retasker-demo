@@ -1,5 +1,10 @@
 import { useRef, useState, useEffect } from 'react';
 
+// Constants
+const SCROLL_THRESHOLD = 80;
+const MAX_SCROLL_SPEED = 12;
+const SCROLL_TOLERANCE = 1;
+
 export interface DragItem {
   id: string;
   type: string;
@@ -11,6 +16,10 @@ export interface DragState {
   dragItem: DragItem | null;
   dragOffset: { x: number; y: number };
   dragPosition: { x: number; y: number };
+  insertionPreview?: {
+    columnId: string;
+    index: number;
+  };
 }
 
 export interface UseDraggableOptions {
@@ -30,19 +39,25 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
   const initialMousePos = useRef({ x: 0, y: 0 });
-  const initialElementPos = useRef({ x: 0, y: 0 });
   const initialScrollPos = useRef({ x: 0, y: 0 });
   const autoScrollRef = useRef<number | null>(null);
-  const currentMousePos = useRef({ x: 0, y: 0 });  const startDrag = (clientX: number, clientY: number) => {
+  const currentMousePos = useRef({ x: 0, y: 0 });
+  const initialDocumentHeight = useRef<number>(0);
+
+  const startDrag = (clientX: number, clientY: number) => {
     if (!dragRef.current) return;
 
     const rect = dragRef.current.getBoundingClientRect();
     initialMousePos.current = { x: clientX, y: clientY };
-    initialElementPos.current = { x: rect.left, y: rect.top };
     initialScrollPos.current = { x: window.scrollX, y: window.scrollY };
+    
+    // Capture initial document height to prevent infinite scroll
+    initialDocumentHeight.current = document.documentElement.scrollHeight;
 
     setIsDragging(true);
-    onDragStart?.(item);// Store drag data globally for drop detection
+    onDragStart?.(item);
+
+    // Store drag data globally for drop detection
     globalDragState = {
       ...globalDragState,
       isDragging: true,
@@ -50,25 +65,42 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       dragOffset: { x: clientX - rect.left, y: clientY - rect.top },
       dragPosition: { x: clientX, y: clientY },
     };
-      // Notify listeners
-    dragStateListeners.forEach(listener => listener(globalDragState));    // Auto-scroll animation function
+
+    // Notify listeners
+    dragStateListeners.forEach(listener => listener(globalDragState));
+
+    // Auto-scroll animation function
     const autoScroll = () => {
       const { y: clientY } = currentMousePos.current;
-      const scrollThreshold = 80;
-      const maxScrollSpeed = 12;
       const viewportHeight = window.innerHeight;
       
       let scrollAmount = 0;
       
+      // Get current scroll info
+      const currentScrollY = window.scrollY;
+      const documentHeight = initialDocumentHeight.current;
+      const maxScrollY = Math.max(0, documentHeight - viewportHeight);
+      
       // Calculate scroll direction and speed based on mouse position
-      if (clientY > viewportHeight - scrollThreshold) {
+      if (clientY > viewportHeight - SCROLL_THRESHOLD) {
         // Near bottom - scroll down
-        const intensity = (clientY - (viewportHeight - scrollThreshold)) / scrollThreshold;
-        scrollAmount = Math.min(maxScrollSpeed, intensity * maxScrollSpeed);
-      } else if (clientY < scrollThreshold) {
+        const remainingScroll = maxScrollY - currentScrollY;
+        if (remainingScroll > SCROLL_TOLERANCE) {
+          const intensity = (clientY - (viewportHeight - SCROLL_THRESHOLD)) / SCROLL_THRESHOLD;
+          scrollAmount = Math.min(MAX_SCROLL_SPEED, intensity * MAX_SCROLL_SPEED);
+          
+          // Ensure we don't scroll past the bottom
+          scrollAmount = Math.min(scrollAmount, remainingScroll);
+        }
+      } else if (clientY < SCROLL_THRESHOLD) {
         // Near top - scroll up
-        const intensity = (scrollThreshold - clientY) / scrollThreshold;
-        scrollAmount = -Math.min(maxScrollSpeed, intensity * maxScrollSpeed);
+        if (currentScrollY > SCROLL_TOLERANCE) {
+          const intensity = (SCROLL_THRESHOLD - clientY) / SCROLL_THRESHOLD;
+          scrollAmount = -Math.min(MAX_SCROLL_SPEED, intensity * MAX_SCROLL_SPEED);
+          
+          // Ensure we don't scroll past the top
+          scrollAmount = Math.max(scrollAmount, -currentScrollY);
+        }
       }
       
       if (scrollAmount !== 0) {
@@ -77,7 +109,9 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       } else {
         autoScrollRef.current = null;
       }
-    };    const handleMove = (clientX: number, clientY: number) => {
+    };
+
+    const handleMove = (clientX: number, clientY: number) => {
       if (!dragRef.current) return;
 
       // Update current mouse position for auto-scroll
@@ -98,21 +132,35 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
 
       // Start auto-scroll if not already running
       if (!autoScrollRef.current) {
-        const scrollThreshold = 80;
         const viewportHeight = window.innerHeight;
         
-        if (clientY > viewportHeight - scrollThreshold || clientY < scrollThreshold) {
+        if (clientY > viewportHeight - SCROLL_THRESHOLD || clientY < SCROLL_THRESHOLD) {
           autoScrollRef.current = requestAnimationFrame(autoScroll);
         }
       }
 
-      // Update global position
+      // Update global position and insertion preview
+      const elementBelow = document.elementFromPoint(clientX, clientY);
+      const columnElement = elementBelow?.closest('[data-task-column]');
+      
+      let insertionPreview = undefined;
+      if (columnElement) {
+        const columnId = columnElement.getAttribute('data-column-id');
+        if (columnId) {
+          const insertionIndex = calculateInsertionIndex(clientY, columnId);
+          insertionPreview = { columnId, index: insertionIndex };
+        }
+      }
+
       globalDragState = {
         ...globalDragState,
         dragPosition: { x: clientX, y: clientY },
+        insertionPreview,
       };
       dragStateListeners.forEach(listener => listener(globalDragState));
-    };    const endDrag = (clientX: number, clientY: number) => {
+    };
+
+    const endDrag = (clientX: number, clientY: number) => {
       // Stop auto-scroll
       if (autoScrollRef.current) {
         cancelAnimationFrame(autoScrollRef.current);
@@ -128,7 +176,8 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       // Check if we're over a drop zone
       const elementBelow = document.elementFromPoint(clientX, clientY);
       const dropZone = elementBelow?.closest('[data-drop-zone]');
-        if (dropZone && globalDragState.dragItem) {
+      
+      if (dropZone && globalDragState.dragItem) {
         const onDropHandler = (dropZone as any)._onDrop;
         if (onDropHandler) {
           onDropHandler(globalDragState.dragItem, { x: clientX, y: clientY });
@@ -144,6 +193,7 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
         dragItem: null,
         dragOffset: { x: 0, y: 0 },
         dragPosition: { x: 0, y: 0 },
+        insertionPreview: undefined,
       };
       dragStateListeners.forEach(listener => listener(globalDragState));
 
@@ -176,7 +226,9 @@ export function useDraggable({ item, onDragStart, onDragEnd }: UseDraggableOptio
       if (touch) {
         endDrag(touch.clientX, touch.clientY);
       }
-    };    const cleanup = () => {
+    };
+
+    const cleanup = () => {
       // Stop auto-scroll if running
       if (autoScrollRef.current) {
         cancelAnimationFrame(autoScrollRef.current);
@@ -229,14 +281,18 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
 
   useEffect(() => {
     const element = dropRef.current;
-    if (!element) return;    // Mark as drop zone
+    if (!element) return;
+
+    // Mark as drop zone
     element.setAttribute('data-drop-zone', 'true');
     (element as any)._onDrop = (dragItem: DragItem, mousePosition?: { x: number; y: number }) => {
       const acceptTypes = Array.isArray(accept) ? accept : [accept];
       if (acceptTypes.includes(dragItem.type)) {
         onDrop?.(dragItem, element, mousePosition);
       }
-    };const handleMouseEnter = () => {
+    };
+
+    const handleMouseEnter = () => {
       if (globalDragState.isDragging) {
         setIsOver(true);
       }
@@ -269,7 +325,9 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
 
     element.addEventListener('mouseenter', handleMouseEnter);
     element.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });    return () => {
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    return () => {
       element.removeEventListener('mouseenter', handleMouseEnter);
       element.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('touchmove', handleTouchMove);
@@ -292,11 +350,31 @@ export function useDroppable({ accept, onDrop, onDragLeave }: UseDroppableOption
       dragStateListeners.delete(handleDragStateChange);
     };
   }, []);
+
   return {
     dropRef: dropRef as React.RefObject<any>,
     isOver,
     dropProps: {},
   };
+}
+
+// Hook to access global drag state for insertion preview
+export function useDragState() {
+  const [dragState, setDragState] = useState<DragState>(globalDragState);
+
+  useEffect(() => {
+    const handleDragStateChange = (state: DragState) => {
+      setDragState(state);
+    };
+
+    dragStateListeners.add(handleDragStateChange);
+    
+    return () => {
+      dragStateListeners.delete(handleDragStateChange);
+    };
+  }, []);
+
+  return dragState;
 }
 
 // Global drag state management
@@ -305,6 +383,7 @@ let globalDragState: DragState = {
   dragItem: null,
   dragOffset: { x: 0, y: 0 },
   dragPosition: { x: 0, y: 0 },
+  insertionPreview: undefined,
 };
 
 const dragStateListeners = new Set<(state: DragState) => void>();
@@ -318,11 +397,16 @@ export function calculateInsertionIndex(mouseY: number, columnId: string): numbe
     columnElement.querySelectorAll('[data-task-card]')
   ) as HTMLElement[];
   
-  if (taskElements.length === 0) return 0;
+  // Filter out the currently dragged task (it has task-card-dragging class)
+  const visibleTaskElements = taskElements.filter(el => 
+    !el.classList.contains('task-card-dragging')
+  );
+  
+  if (visibleTaskElements.length === 0) return 0;
   
   // Find the insertion point by comparing mouse Y with task positions
-  for (let i = 0; i < taskElements.length; i++) {
-    const rect = taskElements[i].getBoundingClientRect();
+  for (let i = 0; i < visibleTaskElements.length; i++) {
+    const rect = visibleTaskElements[i].getBoundingClientRect();
     const taskCenterY = rect.top + rect.height / 2;
     
     // If mouse is above the center of this task, insert before it
@@ -332,7 +416,7 @@ export function calculateInsertionIndex(mouseY: number, columnId: string): numbe
   }
   
   // If we got here, insert at the end
-  return taskElements.length;
+  return visibleTaskElements.length;
 }
 
 

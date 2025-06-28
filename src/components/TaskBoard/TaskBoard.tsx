@@ -4,7 +4,6 @@ import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
 import './TaskBoard.css';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
-import { calculateInsertionIndex } from '../../hooks/useDragAndDrop';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
 import { useState } from 'react';
@@ -32,22 +31,11 @@ function TaskBoard(): React.ReactElement {
 
   const handleTaskDragEnd = () => {
     setDragState(null);
-  };  const handleTaskDrop = (task: Task, targetListId: string, mouseY?: number) => {
+  };  const handleTaskDrop = (task: Task, targetListId: string, insertionIndex?: number) => {
     if (!dragState) return;
-    
-    // Calculate insertion index if mouseY is provided
-    let insertionIndex = 0;
-    if (typeof mouseY === 'number') {
-      insertionIndex = calculateInsertionIndex(mouseY, targetListId);
-    } else {
-      // Fallback: insert at end
-      const targetList = taskLists.find(list => list.id === targetListId);
-      insertionIndex = targetList ? targetList.tasks.length : 0;
-    }
-    
-    // Move the task to the calculated position
-    moveTaskToPosition(dragState.sourceListId, targetListId, task.id, insertionIndex);
-    
+    // Use the provided insertionIndex directly
+    const index = typeof insertionIndex === 'number' ? insertionIndex : 0;
+    moveTaskToPosition(dragState.sourceListId, targetListId, task.id, index);
     setDragState(null);
   };
 

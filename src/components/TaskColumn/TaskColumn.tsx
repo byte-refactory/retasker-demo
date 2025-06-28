@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import type { TaskList } from '../../models';
 import { getContrastTextColor } from '../../utils';
-import { useDroppable } from '../../hooks';
+import { useDroppable, useDragState } from '../../hooks';
 import TaskCard from '../TaskCard';
 import CreateTaskModal from '../CreateTaskModal';
 import useModal from '../../hooks/useModal';
@@ -17,16 +17,24 @@ interface TaskColumnProps {
 
 function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: TaskColumnProps) {
   const { theme } = useTheme();
-  const createTaskModal = useModal(); const { dropRef, isOver } = useDroppable({
+  const createTaskModal = useModal();
+  const dragState = useDragState();
+
+  const { dropRef, isOver } = useDroppable({
     accept: 'task',
-    onDrop: (dragItem, _dropTarget, mousePosition) => {
-      onTaskDrop?.(dragItem.data, taskList.id, mousePosition?.y);
+    onDrop: (dragItem, _dropTarget) => {
+      // Use the current insertion index from dragState, not mouseY
+      const insertionIndex = dragState.insertionPreview?.columnId === taskList.id
+        ? dragState.insertionPreview?.index ?? 0
+        : 0;
+      onTaskDrop?.(dragItem.data, taskList.id, insertionIndex);
     },
   });
 
   const handleAddTask = () => {
     createTaskModal.open();
   };
+
   const handleTaskDragStart = (task: any) => {
     onTaskDragStart?.(task, taskList.id);
   };
@@ -36,6 +44,13 @@ function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: Ta
   };
 
   const headerTextColor = getContrastTextColor(taskList.color);
+
+  // Check if this column should show insertion indicator
+  const shouldShowInsertionIndicator = 
+    dragState.isDragging && 
+    dragState.insertionPreview?.columnId === taskList.id;
+
+  const insertionIndex = shouldShowInsertionIndicator ? dragState.insertionPreview?.index ?? 0 : 0;
 
   return (
     <>      <section
@@ -78,20 +93,33 @@ function TaskColumn({ taskList, onTaskDragStart, onTaskDragEnd, onTaskDrop }: Ta
         </button>
       </div>
       <div className="column-content" role="list" aria-label={`Tasks in ${taskList.name}`}>
+        {/* Insertion indicator at the beginning for empty column */}
+        {shouldShowInsertionIndicator && taskList.tasks.length === 0 && (
+          <div className="insertion-indicator" />
+        )}
         {taskList.tasks.length > 0 ? (
-          taskList.tasks.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              columnColor={taskList.color}
-              onDragStart={handleTaskDragStart}
-              onDragEnd={handleTaskDragEnd}
-            />
+          taskList.tasks.map((task, index) => (
+            <div key={task.id}>
+              {/* Insertion indicator before this task */}
+              {shouldShowInsertionIndicator && insertionIndex === index && (
+                <div className="insertion-indicator" />
+              )}
+              <TaskCard
+                task={task}
+                columnColor={taskList.color}
+                onDragStart={handleTaskDragStart}
+                onDragEnd={handleTaskDragEnd}
+              />
+            </div>
           ))
         ) : (
           <p className="empty-message" role="status" aria-live="polite">
             No tasks in this list
           </p>
+        )}
+        {/* Insertion indicator at the end */}
+        {shouldShowInsertionIndicator && insertionIndex >= taskList.tasks.length && taskList.tasks.length > 0 && (
+          <div className="insertion-indicator" />
         )}
       </div>
     </section>

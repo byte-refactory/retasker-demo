@@ -200,13 +200,13 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
     const moveTaskToPosition = (sourceListId: string, targetListId: string, taskId: string, position: number) => {
         let taskToMove: Task | null = null;
         let found = false;
-        
+        let originalIndex = -1;
         setTaskLists(prev => {
             let updated = prev.map(list => {
                 if (list.id === sourceListId) {
-                    const taskIndex = list.tasks.findIndex(task => task.id === taskId);
-                    if (taskIndex !== -1) {
-                        taskToMove = list.tasks[taskIndex];
+                    originalIndex = list.tasks.findIndex(task => task.id === taskId);
+                    if (originalIndex !== -1) {
+                        taskToMove = list.tasks[originalIndex];
                         found = true;
                         return {
                             ...list,
@@ -217,14 +217,16 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
                 }
                 return list;
             });
-            
             // Then add it to the target list at the specified position
             if (found && taskToMove) {
                 updated = updated.map(list => {
                     if (list.id === targetListId) {
                         const newTasks = [...list.tasks];
-                        // Ensure position is within bounds
-                        const insertAt = Math.max(0, Math.min(position, newTasks.length));
+                        let insertAt = Math.max(0, Math.min(position, newTasks.length));
+                        // If moving within the same list and originalIndex < insertAt, adjust insertAt
+                        if (sourceListId === targetListId && originalIndex !== -1 && originalIndex < insertAt) {
+                            insertAt--;
+                        }
                         newTasks.splice(insertAt, 0, { ...taskToMove!, updatedAt: new Date() });
                         return {
                             ...list,
@@ -235,10 +237,8 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
                     return list;
                 });
             }
-            
             return updated;
         });
-        
         return found;
     };
 
