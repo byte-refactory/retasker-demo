@@ -65,3 +65,16 @@
   margin: 10px 0;
   padding: 20px 10px;
 }
+
+/* Drag and drop states */
+.column-drag-over {
+  border-color: #2196f3 !important;
+  border-style: dashed !important;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
+}
+
+/* .column-drag-over .column-content {
+  border-radius: 4px;
+  padding: 8px;
+  transition: all 0.2s ease;
+} */

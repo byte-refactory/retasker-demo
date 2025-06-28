@@ -1,0 +1,64 @@
+.trash-drop-zone {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 20px 24px;
+  border: 2px dashed;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.trash-drop-zone-over {
+  transform: translateX(-50%) scale(1.1);
+  animation: pulse-glow 0.8s infinite;
+  box-shadow: 0 12px 32px rgba(255, 68, 68, 0.4);
+}
+
+.trash-drop-zone:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+}
+
+.trash-icon {
+  transition: all 0.3s ease;
+}
+
+.trash-icon-active {
+  transform: scale(1.3);
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.trash-text {
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+/* Additional hover effects for better interactivity */
+.trash-drop-zone:hover .trash-icon {
+  transform: scale(1.15);
+}
+
+.trash-drop-zone:hover .trash-text {
+  font-weight: 600;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 12px 32px rgba(255, 68, 68, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 16px 40px rgba(255, 68, 68, 0.6);
+  }
+}

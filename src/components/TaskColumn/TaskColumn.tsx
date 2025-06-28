@@ -1,4 +1,6 @@
 import { Plus } from 'lucide-react';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import type { TaskList } from '../../models';
 import { getContrastTextColor } from '../../utils';
 import TaskCard from '../TaskCard';
@@ -14,6 +16,12 @@ interface TaskColumnProps {
 function TaskColumn({ taskList }: TaskColumnProps) {
   const { theme } = useTheme();
   const createTaskModal = useModal();
+  
+  const { setNodeRef, isOver } = useDroppable({
+    id: taskList.id,
+  });
+
+  const taskIds = taskList.tasks.map(task => task.id);
 
   const handleAddTask = () => {
     createTaskModal.open();
@@ -24,12 +32,13 @@ function TaskColumn({ taskList }: TaskColumnProps) {
   return (
     <>
       <section
-        className="column"
+        ref={setNodeRef}
+        className={`column ${isOver ? 'column-drag-over' : ''}`}
         aria-labelledby={`column-${taskList.id}-title`}
         data-task-column="true"
         data-column-id={taskList.id}
         style={{
-          backgroundColor: theme.taskBoard.columnBackground,
+          backgroundColor: isOver ? theme.taskBoard.columnDragHoverBackground : theme.taskBoard.columnBackground,
           borderColor: theme.taskBoard.columnBorder
         }}
     >
@@ -62,19 +71,21 @@ function TaskColumn({ taskList }: TaskColumnProps) {
         </button>
       </div>
       <div className="column-content" role="list" aria-label={`Tasks in ${taskList.name}`}>
-        {taskList.tasks.length > 0 ? (
-          taskList.tasks.map(task => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              columnColor={taskList.color}
-            />
-          ))
-        ) : (
-          <p className="empty-message" role="status" aria-live="polite">
-            No tasks in this list
-          </p>
-        )}
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {taskList.tasks.length > 0 ? (
+            taskList.tasks.map(task => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                columnColor={taskList.color}
+              />
+            ))
+          ) : (
+            <p className="empty-message" role="status" aria-live="polite">
+              No tasks in this list
+            </p>
+          )}
+        </SortableContext>
       </div>
     </section>
 
