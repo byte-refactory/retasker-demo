@@ -1,5 +1,6 @@
 import TaskBoard from '../../components/TaskBoard';
 import { TaskListProvider } from '../../contexts/TaskListsContext';
+import { DragDropProvider } from '../../contexts/DragDropContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import './TaskBoardPage.css';
 
@@ -16,7 +17,9 @@ function TaskBoardContent() {
 function TaskBoardPage() {
   return (
     <TaskListProvider>
-      <TaskBoardContent />
+      <DragDropProvider>
+        <TaskBoardContent />
+      </DragDropProvider>
     </TaskListProvider>
   );
 }

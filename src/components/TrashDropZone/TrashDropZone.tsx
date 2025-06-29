@@ -1,26 +1,34 @@
 import { Trash2 } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useDragDrop } from '../../contexts/DragDropContext';
 import { useState, useEffect } from 'react';
 import './TrashDropZone.css';
 
 interface TrashDropZoneProps {
     isVisible: boolean;
-    onHoverChange?: (isHovered: boolean) => void;
-    resetHover?: boolean; // New prop to force reset hover state
 }
 
-function TrashDropZone({ isVisible, onHoverChange, resetHover }: TrashDropZoneProps) {
+function TrashDropZone({ isVisible }: TrashDropZoneProps) {
     const { theme } = useTheme();
+    const { onTaskDeletion, onDragEnd } = useDragDrop();
     const [isHovered, setIsHovered] = useState(false);
     
-    // Reset hover state when resetHover prop changes
+    // Reset hover state when any task is deleted or drag ends
     useEffect(() => {
-        if (resetHover) {
+        const unsubscribeTaskDeletion = onTaskDeletion(() => {
             setIsHovered(false);
-            onHoverChange?.(false);
-        }
-    }, [resetHover, onHoverChange]);
+        });
+        
+        const unsubscribeDragEnd = onDragEnd(() => {
+            setIsHovered(false);
+        });
+        
+        return () => {
+            unsubscribeTaskDeletion();
+            unsubscribeDragEnd();
+        };
+    }, [onTaskDeletion, onDragEnd]);
     
     const { setNodeRef } = useDroppable({
         id: 'trash',
@@ -28,12 +36,10 @@ function TrashDropZone({ isVisible, onHoverChange, resetHover }: TrashDropZonePr
 
     const handleMouseEnter = () => {
         setIsHovered(true);
-        onHoverChange?.(true);
     };
 
     const handleMouseLeave = () => {
         setIsHovered(false);
-        onHoverChange?.(false);
     };
 
     if (!isVisible) return null;
@@ -42,6 +48,7 @@ function TrashDropZone({ isVisible, onHoverChange, resetHover }: TrashDropZonePr
 
     return (
         <div
+            id="trash"
             ref={setNodeRef}
             className={`trash-drop-zone ${isActive ? 'trash-drop-zone-over' : ''}`}
             onMouseEnter={handleMouseEnter}
