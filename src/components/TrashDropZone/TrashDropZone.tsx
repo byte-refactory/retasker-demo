@@ -1,31 +1,51 @@
 import { Trash2 } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './TrashDropZone.css';
 
 interface TrashDropZoneProps {
     isVisible: boolean;
+    onHoverChange?: (isHovered: boolean) => void;
+    resetHover?: boolean; // New prop to force reset hover state
 }
 
-function TrashDropZone({ isVisible }: TrashDropZoneProps) {
+function TrashDropZone({ isVisible, onHoverChange, resetHover }: TrashDropZoneProps) {
     const { theme } = useTheme();
     const [isHovered, setIsHovered] = useState(false);
     
-    const { setNodeRef, isOver } = useDroppable({
+    // Reset hover state when resetHover prop changes
+    useEffect(() => {
+        if (resetHover) {
+            setIsHovered(false);
+            onHoverChange?.(false);
+        }
+    }, [resetHover, onHoverChange]);
+    
+    const { setNodeRef } = useDroppable({
         id: 'trash',
     });
 
+    const handleMouseEnter = () => {
+        setIsHovered(true);
+        onHoverChange?.(true);
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        onHoverChange?.(false);
+    };
+
     if (!isVisible) return null;
 
-    const isActive = isOver || isHovered;
+    const isActive = isHovered;
 
     return (
         <div
             ref={setNodeRef}
             className={`trash-drop-zone ${isActive ? 'trash-drop-zone-over' : ''}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{
                 backgroundColor: isActive ? '#ff4444' : theme.background.secondary,
                 borderColor: isActive ? '#ff6666' : theme.border.medium,
@@ -37,7 +57,7 @@ function TrashDropZone({ isVisible }: TrashDropZoneProps) {
                 className={`trash-icon ${isActive ? 'trash-icon-active' : ''}`}
             />
             <span className="trash-text">
-                {isOver ? 'Release to Delete' : isHovered ? 'Drop Task Here' : 'Drop to Delete'}
+                Drop to Delete
             </span>
         </div>
     );

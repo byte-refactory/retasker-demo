@@ -1,5 +1,5 @@
-import { DndContext, closestCenter, DragOverlay, rectIntersection } from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent, DragOverEvent, CollisionDetection } from '@dnd-kit/core';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import TaskColumn from '../TaskColumn';
 import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
 import TaskCard from '../TaskCard';
@@ -18,6 +18,8 @@ function TaskBoard(): React.ReactElement {
   const [isManageModalOpen, setManageModalOpen] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [clonedTaskLists, setClonedTaskLists] = useState<typeof taskLists | null>(null);
+  const [isTrashHovered, setIsTrashHovered] = useState(false);
+  const [resetTrashHover, setResetTrashHover] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     task: Task | null;
@@ -29,33 +31,6 @@ function TaskBoard(): React.ReactElement {
     sourceListId: '',
     taskListName: '',
   });
-
-  // Custom collision detection that prioritizes the trash zone
-  const customCollisionDetection: CollisionDetection = (args) => {
-    // First check if we're colliding with the trash zone using rectangle intersection
-    const trashCollisions = rectIntersection({
-      ...args,
-      droppableContainers: args.droppableContainers.filter(
-        container => container.id === 'trash'
-      )
-    });
-    
-    // If there's any collision with trash, prioritize it
-    if (trashCollisions.length > 0) {
-      return trashCollisions;
-    }
-    
-    // If no trash collision, use default collision detection for other elements
-    // but exclude trash from the calculation to avoid conflicts
-    const nonTrashCollisions = closestCenter({
-      ...args,
-      droppableContainers: args.droppableContainers.filter(
-        container => container.id !== 'trash'
-      )
-    });
-    
-    return nonTrashCollisions;
-  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -126,6 +101,10 @@ function TaskBoard(): React.ReactElement {
     setActiveTask(null);
     setClonedTaskLists(null);
     
+    // Reset trash hover state after any drag operation
+    setResetTrashHover(true);
+    setTimeout(() => setResetTrashHover(false), 10); // Reset the reset flag
+    
     if (!over) {
       // If dropped outside, restore original state
       return;
@@ -134,8 +113,8 @@ function TaskBoard(): React.ReactElement {
     const taskId = active.id as string;
     const overId = over.id as string;
 
-    // Handle dropping on trash
-    if (overId === 'trash') {
+    // Handle dropping on trash (fallback for direct drops)
+    if (isTrashHovered) {
       // Find source list and task
       let sourceTask: Task | null = null;
       
@@ -219,7 +198,6 @@ function TaskBoard(): React.ReactElement {
 
   return (
     <DndContext
-      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -249,7 +227,11 @@ function TaskBoard(): React.ReactElement {
         </div>
 
         {/* Trash Drop Zone - only visible when dragging */}
-        <TrashDropZone isVisible={!!activeTask} />
+        <TrashDropZone 
+          isVisible={!!activeTask} 
+          onHoverChange={setIsTrashHovered}
+          resetHover={resetTrashHover}
+        />
 
         <ManageTaskListsModal isOpen={isManageModalOpen} onClose={() => setManageModalOpen(false)} />
         
