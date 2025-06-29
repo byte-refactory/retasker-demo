@@ -9,6 +9,40 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  border-radius: 4px;
+  /* Only transition specific properties, not transform */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.list-edit-item-dragging {
+  background-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* Disable all CSS transitions during drag to prevent conflicts */
+  transition: none !important;
+}
+
+.list-edit-item-overlay {
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.list-edit-item-drag-handle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.list-edit-item-drag-handle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.list-edit-item-drag-handle:active {
+  cursor: grabbing;
 }
 
 .list-edit-item-input {

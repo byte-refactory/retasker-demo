@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { type Theme } from '../utils/theme';
 import { StorageService } from '../utils';
@@ -60,6 +60,19 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
   };
 
   const themeName: ThemeName = theme.name;
+
+  // Apply theme to document elements
+  useEffect(() => {
+    // Apply transition styles to document elements for consistent timing
+    document.documentElement.style.transition = 'background-color 0.2s ease, color 0.2s ease';
+    document.body.style.transition = 'background-color 0.2s ease, color 0.2s ease';
+    
+    // Apply theme colors
+    document.documentElement.style.backgroundColor = theme.background.primary;
+    document.documentElement.style.color = theme.text.primary;
+    document.body.style.backgroundColor = theme.background.primary;
+    document.body.style.color = theme.text.primary;
+  }, [theme]);
 
   const contextValue: ThemeContextType = {
     theme,

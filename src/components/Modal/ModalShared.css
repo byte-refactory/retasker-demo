@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
 }
 
 .modal-x-btn:hover,
@@ -25,7 +25,7 @@
   background: none;
   cursor: pointer;
   font-size: 1rem;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
   margin-left: 8px;
 }
 

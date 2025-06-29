@@ -9,7 +9,13 @@ function AppContent() {
   const { themeName, theme } = useTheme();
   
   return (
-    <div data-theme={themeName}>
+    <div data-theme={themeName}
+      className="app"
+      style={{
+        backgroundColor: theme.background.primary,
+        color: theme.text.primary,
+      }}
+    >
       <header 
         className="app-header"
         style={{

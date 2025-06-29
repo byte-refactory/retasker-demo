@@ -81,14 +81,28 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
           onChange={setNames}
           placeholder="Task list name"
         />        <div className="manage-task-lists-modal-footer">
-          <button className="modal-footer-btn" onClick={handleResetToDefaults} style={{ color: theme.interactive.warning || '#dc3545' }}>
+          <button 
+            className="manage-task-lists-modal-reset-btn" 
+            onClick={handleResetToDefaults}
+          >
             Reset to Defaults
           </button>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="modal-footer-btn" onClick={onClose} style={{ color: theme.text.primary }}>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              className="modal-footer-btn" 
+              onClick={onClose} 
+              style={{ color: theme.text.primary }}
+            >
               Cancel
             </button>
-            <button className="modal-footer-btn" onClick={handleSave} style={{ color: theme.interactive.primary }}>
+            <button 
+              className="manage-task-lists-modal-save-btn" 
+              onClick={handleSave}
+              style={{
+                border: `1px solid ${theme.interactive.primary}`,
+                backgroundColor: theme.interactive.primary,
+              }}
+            >
               Save
             </button>
           </div>
