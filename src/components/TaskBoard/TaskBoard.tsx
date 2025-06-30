@@ -16,7 +16,7 @@ import { useTaskLists } from '../../contexts/TaskListsContext';
 import { useDragDrop } from '../../contexts/DragDropContext';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Task } from '../../models';
 
 function TaskBoard(): React.ReactElement {
@@ -119,6 +119,11 @@ function TaskBoard(): React.ReactElement {
     });
   };
 
+  // Memoize the task list name to prevent unnecessary re-renders
+  const editTaskListName = useMemo(() => {
+    return taskLists.find(list => list.id === editTask.sourceListId)?.name || '';
+  }, [taskLists, editTask.sourceListId]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -155,10 +160,11 @@ function TaskBoard(): React.ReactElement {
         
         {/* Edit Task Modal */}
         <SaveEditModal
+          key={editTask.task?.id || 'create'}
           isOpen={editTask.isOpen}
           onClose={handleEditTaskClose}
           taskListId={editTask.sourceListId}
-          taskListName={taskLists.find(list => list.id === editTask.sourceListId)?.name || ''}
+          taskListName={editTaskListName}
           task={editTask.task}
           onDelete={handleEditTaskDelete}
         />

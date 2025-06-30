@@ -50,7 +50,7 @@ export default function SaveEditModal({
         });
       }
     }
-  }, [isOpen, task]);
+  }, [isOpen, task?.id, task?.title, task?.description]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
