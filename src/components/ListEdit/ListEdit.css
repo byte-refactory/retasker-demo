@@ -12,6 +12,8 @@
   border-radius: 4px;
   /* Only transition specific properties, not transform */
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none; /* Prevent text selection during drag */
+  touch-action: none; /* Disable touch actions like scrolling during drag */
 }
 
 .list-edit-item-dragging {
@@ -35,6 +37,7 @@
   padding: 4px;
   border-radius: 2px;
   transition: background-color 0.2s ease;
+  touch-action: none; /* Disable touch scrolling on drag handle */
 }
 
 .list-edit-item-drag-handle:hover {

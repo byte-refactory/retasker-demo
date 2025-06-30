@@ -15,11 +15,46 @@ interface TaskListContextType {
     deleteTask: (taskListId: string, taskId: string) => boolean;
     moveTask: (sourceListId: string, targetListId: string, taskId: string) => boolean;
     moveTaskToPosition: (sourceListId: string, targetListId: string, taskId: string, position: number) => boolean;
-    reorderTaskLists: (orderedNames: string[]) => void;
+    reorderTaskLists: (orderedIds: string[]) => void;
     resetToDefaults: () => void;
 }
 
 const TaskListContext = createContext<TaskListContextType | undefined>(undefined);
+
+// Default task lists factory function
+const getDefaults = (): TaskList[] => {
+    const defaultLists: TaskList[] = [
+        {
+            id: crypto.randomUUID(),
+            name: 'To Do',
+            hidden: false,
+            color: '#007bff',
+            tasks: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
+        {
+            id: crypto.randomUUID(),
+            name: 'In Progress',
+            hidden: false,
+            color: '#28a745',
+            tasks: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
+        {
+            id: crypto.randomUUID(),
+            name: 'Done',
+            hidden: false,
+            color: '#6c757d',
+            tasks: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        },
+    ];
+
+    return defaultLists;
+};
 
 interface TaskListProviderProps {
     children: ReactNode;
@@ -69,7 +104,6 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
                 }
                 return list;
             });
-            console.log('setTaskLists (updateTaskList):', JSON.stringify(updatedTaskLists));
             return updatedTaskLists;
         });
         return updatedTaskList;
@@ -242,87 +276,20 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
         return found;
     };
 
-    const reorderTaskLists = (orderedNames: string[]) => {
+    const reorderTaskLists = (orderedIds: string[]) => {
         setTaskLists(prev => {
             const visible = prev.filter(l => !l.hidden);
             const hidden = prev.filter(l => l.hidden);
-            const reordered = orderedNames
-                .map(name => visible.find(l => l.name === name))
+            const reordered = orderedIds
+                .map(id => visible.find(l => l.id === id))
                 .filter(Boolean) as TaskList[];
             return [...reordered, ...hidden];
         });
     };
 
-    const getDefaults = () => {
-        const defaultLists: TaskList[] = [
-            {
-                id: crypto.randomUUID(),
-                name: 'To Do',
-                hidden: false,
-                color: '#007bff',
-                tasks: [
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Review project requirements',
-                        description: 'Go through all the requirements and create a checklist',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Set up development environment',
-                        description: 'Install necessary tools and dependencies',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                ],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            },
-            {
-                id: crypto.randomUUID(),
-                name: 'In Progress',
-                hidden: false,
-                color: '#28a745',
-                tasks: [
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Implement drag and drop',
-                        description: 'Add proper multi-container drag and drop functionality',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                ],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            },
-            {
-                id: crypto.randomUUID(),
-                name: 'Done',
-                hidden: false,
-                color: '#6c757d',
-                tasks: [
-                    {
-                        id: crypto.randomUUID(),
-                        title: 'Initial project setup',
-                        description: 'Created the basic project structure',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                ],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            },
-        ];
-
-        return defaultLists
-    }
-
     const resetToDefaults = () => {
-        setTaskLists(getDefaults);
+        setTaskLists(getDefaults());
     };
-
-
 
     const contextValue: TaskListContextType = {
         taskLists,

@@ -1,4 +1,11 @@
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { 
+  DndContext, 
+  DragOverlay, 
+  TouchSensor, 
+  MouseSensor, 
+  useSensor, 
+  useSensors 
+} from '@dnd-kit/core';
 import TaskColumn from '../TaskColumn';
 import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
 import TaskCard from '../TaskCard';
@@ -23,6 +30,23 @@ function TaskBoard(): React.ReactElement {
     handleDragCancel,
     onTaskDeletion 
   } = useDragDrop();
+
+  // Configure sensors for mobile and desktop support
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      // Require the mouse to move by 10 pixels before activating
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      // Press delay of 250ms, with tolerance of 5px of movement
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
   
   const [isManageModalOpen, setManageModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -74,6 +98,7 @@ function TaskBoard(): React.ReactElement {
 
   return (
     <DndContext
+      sensors={sensors}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}

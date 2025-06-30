@@ -9,6 +9,13 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  cursor: grab;
+  user-select: none; /* Prevent text selection on drag */
+  touch-action: none; /* Disable touch actions like scrolling during drag */
+}
+
+.task-card:active {
+  cursor: grabbing;
 }
 
 .task-card:hover {
@@ -61,11 +68,14 @@
   cursor: grabbing;
 }
 
-/* Dragging state - original task becomes invisible, overlay shows the drag preview */
+/* Dragging state */
 .task-card-dragging {
-  opacity: 0 !important;
+  transform: rotate(2deg) scale(1.02);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }
 
 .task-card-dragging .task-drag-handle {
   cursor: grabbing;
+  opacity: 1;
 }

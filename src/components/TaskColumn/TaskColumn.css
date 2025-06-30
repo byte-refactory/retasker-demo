@@ -14,6 +14,7 @@
   margin: 0 0 12px 0;
   padding: 6px 12px;
   border-radius: 6px;
+  overflow: hidden;
 }
 
 .column-title {
@@ -22,6 +23,8 @@
   font-size: 1.1rem;
   font-weight: 600;
   flex: 1;
+  text-wrap: nowrap;
+  overflow: hidden;
 }
 
 .add-task-button {
@@ -72,9 +75,3 @@
   border-style: dashed !important;
   box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
 }
-
-/* .column-drag-over .column-content {
-  border-radius: 4px;
-  padding: 8px;
-  transition: all 0.2s ease;
-} */

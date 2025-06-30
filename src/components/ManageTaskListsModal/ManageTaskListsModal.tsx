@@ -7,6 +7,8 @@ import { useTaskLists } from '../../contexts/TaskListsContext';
 import { ListEdit } from '../ListEdit';
 import { useEffect, useState } from 'react';
 import { getRandomColor } from '../../utils/colorUtils';
+import type { ItemReference } from '../ListEdit/ListEditItem';
+import type { TaskList } from '../../models/TaskList';
 
 interface ManageTaskListsModalProps {
   isOpen: boolean;
@@ -16,42 +18,115 @@ interface ManageTaskListsModalProps {
 export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskListsModalProps) {
   const { theme } = useTheme();
   const { taskLists, updateTaskList, createTaskList, reorderTaskLists, resetToDefaults } = useTaskLists();
-  const [names, setNames] = useState<string[]>([]);
+  const [taskListItems, setTaskListItems] = useState<ItemReference[]>([]);
   // Only show non-hidden lists
   const visibleLists = taskLists.filter(l => !(l as any).hidden);
-
+  
   useEffect(() => {
     if (isOpen) {
-      setNames(visibleLists.map(l => l.name));
+      setTaskListItems(visibleLists.map(l => ({ id: l.id, name: l.name })));
     }
   }, [isOpen, taskLists]);
 
-  const handleSave = () => {
-    // Hide lists that are not in the new names
-    taskLists.forEach(list => {
-      if (!names.includes(list.name) && !(list as any).hidden) {
-        updateTaskList(list.id, { hidden: true } as any);
-      }
-    });
-    // Unhide lists that are in the new names but currently hidden
-    taskLists.forEach(list => {
-      if (names.includes(list.name) && (list as any).hidden) {
-        updateTaskList(list.id, { hidden: false } as any);
+  // Validation logic
+  const getValidationError = () => {
+    const names = taskListItems.map(item => item.name.trim());
+    
+    // Check for blank names
+    const hasBlankNames = names.some(name => name === '');
+    if (hasBlankNames) {
+      return 'All task lists must have a name';
+    }
+    
+    // Check for duplicate names
+    const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
+    if (duplicates.length > 0) {
+      return 'Task list names must be unique';
+    }
+    
+    return null;
+  };
+
+  // Error checking function for individual items
+  const getItemError = (item: ItemReference) => {
+    const trimmedName = item.name.trim();
+    
+    // Check if name is blank
+    if (trimmedName === '') {
+      return true;
+    }
+    
+    // Check if name is duplicate
+    const names = taskListItems.map(listItem => listItem.name.trim());
+    const isDuplicate = names.filter(name => name === trimmedName).length > 1;
+    return isDuplicate;
+  };
+
+  const validationError = getValidationError();
+  const canSave = validationError === null;
+
+  const handleSave = async () => {
+    // Check validation before proceeding
+    if (!canSave) {
+      return;
+    }
+
+    // First, collect all new lists that need to be created
+    const newListsToCreate = taskListItems.filter(item => 
+      !taskLists.some(list => list.id === item.id)
+    );
+    
+    // Create new lists first
+    const createdLists: TaskList[] = [];
+    for (const item of newListsToCreate) {
+      const newList = createTaskList({
+        name: item.name,
+        color: getRandomColor(),
+        tasks: [],
+      });
+      createdLists.push(newList);
+    }
+    
+    // Update existing task list names
+    taskListItems.forEach(item => {
+      const existingList = taskLists.find(list => list.id === item.id);
+      if (existingList && existingList.name !== item.name) {
+        updateTaskList(existingList.id, { ...existingList, name: item.name });
       }
     });
     
-    // Add new lists for names not in any list
-    names.forEach(name => {
-      if (!taskLists.some(list => list.name === name)) {
-        createTaskList({
-          name,
-          color: getRandomColor(),
-          tasks: [],
-        });
+    // Hide lists that are not in the new items
+    taskLists.forEach(list => {
+      if (!taskListItems.some(item => item.id === list.id) && !(list as any).hidden) {
+        updateTaskList(list.id, { hidden: true } as any);
+      }
+    });
+    
+    // Unhide lists that are in the new items but currently hidden
+    taskLists.forEach(list => {
+      if (taskListItems.some(item => item.id === list.id) && (list as any).hidden) {
+        updateTaskList(list.id, { hidden: false } as any);
       }
     });
 
-    reorderTaskLists(names);
+    // Wait a bit for state updates to settle, then do reordering
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        // Map old IDs to new IDs for created lists
+        const orderedIds = taskListItems.map(item => {
+          const existingList = taskLists.find(list => list.id === item.id);
+          if (existingList) {
+            return item.id; // Use existing ID
+          }
+          // For new lists, find the created list by name
+          const createdList = createdLists.find(list => list.name === item.name);
+          return createdList ? createdList.id : item.id;
+        });
+        
+        reorderTaskLists(orderedIds);
+      }, 100);
+    }
+    
     onClose();
   };
 
@@ -77,9 +152,10 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
           </button>
         </div>
         <ListEdit
-          values={names}
-          onChange={setNames}
+          values={taskListItems}
+          onChange={setTaskListItems}
           placeholder="Task list name"
+          getItemError={getItemError}
         />        <div className="manage-task-lists-modal-footer">
           <button 
             className="manage-task-lists-modal-reset-btn" 
@@ -98,9 +174,14 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
             <button 
               className="manage-task-lists-modal-save-btn" 
               onClick={handleSave}
+              disabled={!canSave}
+              title={validationError || 'Save changes'}
               style={{
-                border: `1px solid ${theme.interactive.primary}`,
-                backgroundColor: theme.interactive.primary,
+                border: `1px solid ${canSave ? theme.interactive.primary : theme.border.medium}`,
+                backgroundColor: canSave ? theme.interactive.primary : theme.background.secondary,
+                color: canSave ? 'white' : theme.text.secondary,
+                cursor: canSave ? 'pointer' : 'not-allowed',
+                opacity: canSave ? 1 : 0.6,
               }}
             >
               Save

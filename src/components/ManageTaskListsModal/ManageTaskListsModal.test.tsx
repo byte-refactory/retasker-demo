@@ -19,7 +19,7 @@ describe('ManageTaskListsModal', () => {
   });  it('can add a new task list', async () => {
     // First add some default lists to localStorage so we have input fields
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [] }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -30,14 +30,21 @@ describe('ManageTaskListsModal', () => {
     const input = inputs[inputs.length - 1];
     fireEvent.change(input, { target: { value: 'New List' } });
     fireEvent.click(screen.getByText(/save/i));
+    
+    // Check localStorage to see if the new task list was created
     await waitFor(() => {
-      const newInput = screen.getByDisplayValue('New List');
-      expect(newInput).toBeInTheDocument();
+      const result = localStorage.getItem('retasker_task_lists');
+      expect(result).toBeTruthy();
+      if (result != null) {
+        const stored = JSON.parse(result);
+        expect(stored).toHaveLength(2);
+        expect(stored.some((list: any) => list.name === 'New List')).toBe(true);
+      }
     });
   });  it('can rename a task list', async () => {
     // First add some default lists to localStorage
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [] }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -53,8 +60,8 @@ describe('ManageTaskListsModal', () => {
   it('can hide (remove) a task list', async () => {
     // First add some default lists to localStorage
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [] },
-      { id: '2', name: 'In Progress', color: '#28a745', tasks: [] }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2', name: 'In Progress', color: '#28a745', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -69,8 +76,8 @@ describe('ManageTaskListsModal', () => {
   it('can reorder task lists', async () => {
     // First add some default lists to localStorage
     const defaultLists = [
-      { id: '1', name: 'List A', color: '#007bff', tasks: [] },
-      { id: '2', name: 'List B', color: '#28a745', tasks: [] }
+      { id: '1', name: 'List A', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2', name: 'List B', color: '#28a745', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -93,5 +100,50 @@ describe('ManageTaskListsModal', () => {
         expect(stored[1].name).toBe('List 1');
       }
     });
+  });
+
+  it('disables save button when task list names are blank', async () => {
+    const defaultLists = [
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ];
+    localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
+    
+    renderModal();
+    const input = screen.getAllByPlaceholderText(/task list name/i)[0];
+    fireEvent.change(input, { target: { value: '' } });
+    
+    const saveButton = screen.getByText(/save/i);
+    expect(saveButton).toBeDisabled();
+    expect(saveButton).toHaveAttribute('title', 'All task lists must have a name');
+  });
+
+  it('disables save button when task list names are duplicated', async () => {
+    const defaultLists = [
+      { id: '1', name: 'List A', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2', name: 'List B', color: '#28a745', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ];
+    localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
+    
+    renderModal();
+    const inputs = screen.getAllByPlaceholderText(/task list name/i);
+    fireEvent.change(inputs[1], { target: { value: 'List A' } }); // Make duplicate
+    
+    const saveButton = screen.getByText(/save/i);
+    expect(saveButton).toBeDisabled();
+    expect(saveButton).toHaveAttribute('title', 'Task list names must be unique');
+  });
+
+  it('shows error styling on invalid input fields', async () => {
+    const defaultLists = [
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ];
+    localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
+    
+    renderModal();
+    const input = screen.getAllByPlaceholderText(/task list name/i)[0];
+    fireEvent.change(input, { target: { value: '' } });
+    
+    // The input should have error styling with red border
+    expect(input).toHaveStyle('border: 1px solid rgb(220, 53, 69)');
   });
 });

@@ -5,15 +5,21 @@ import './ListEdit.css';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+export interface ItemReference {
+  id: string;
+  name: string;
+}
+
 interface ListEditItemProps {
   id: string;
-  value: string;
+  value: ItemReference;
   onChange: (value: string) => void;
   onDelete: () => void;
   placeholder?: string;
+  isError?: boolean;
 }
 
-export default function ListEditItem({ id, value, onChange, onDelete, placeholder }: ListEditItemProps) {
+export default function ListEditItem({ id, value, onChange, onDelete, placeholder, isError = false }: ListEditItemProps) {
   const { theme } = useTheme();
 
   const {
@@ -40,13 +46,14 @@ export default function ListEditItem({ id, value, onChange, onDelete, placeholde
       <input
         className="list-edit-item-input"
         type="text"
-        value={value}
+        value={value.name}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         style={{
           background: theme.background.secondary,
           color: theme.text.primary,
-          border: `1px solid ${theme.border.medium}`,
+          border: `1px solid ${isError ? theme.interactive.danger : theme.border.medium}`,
+          boxShadow: isError ? `0 0 0 1px ${theme.interactive.danger}` : 'none',
         }}
       />
       <div
