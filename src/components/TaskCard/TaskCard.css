@@ -78,3 +78,39 @@
   cursor: grabbing;
   opacity: 1;
 }
+
+/* Task card controls */
+.task-card-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.task-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.task-card:hover .task-edit-btn {
+  opacity: 0.7;
+}
+
+.task-edit-btn:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.task-edit-btn:focus {
+  outline: 2px solid rgba(0, 123, 255, 0.5);
+  outline-offset: 2px;
+}

@@ -1,19 +1,20 @@
 import { Plus } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
-import type { TaskList } from '../../models';
+import type { TaskList, Task } from '../../models';
 import { getContrastTextColor } from '../../utils';
 import TaskCard from '../TaskCard';
-import CreateTaskModal from '../CreateTaskModal';
+import SaveEditModal from '../SaveEditModal';
 import useModal from '../../hooks/useModal';
 import { useTheme } from '../../contexts/ThemeContext';
 import './TaskColumn.css';
 
 interface TaskColumnProps {
   taskList: TaskList;
+  onEditTask?: (task: Task) => void;
 }
 
-function TaskColumn({ taskList }: TaskColumnProps) {
+function TaskColumn({ taskList, onEditTask }: TaskColumnProps) {
   const { theme } = useTheme();
   const createTaskModal = useModal();
   
@@ -78,6 +79,7 @@ function TaskColumn({ taskList }: TaskColumnProps) {
                 key={task.id}
                 task={task}
                 columnColor={taskList.color}
+                onEdit={onEditTask}
               />
             ))
           ) : (
@@ -90,7 +92,7 @@ function TaskColumn({ taskList }: TaskColumnProps) {
     </section>
 
       {/* Create Task Modal */}
-      <CreateTaskModal
+      <SaveEditModal
         isOpen={createTaskModal.isOpen}
         onClose={createTaskModal.close}
         taskListId={taskList.id}

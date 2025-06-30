@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Settings } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import type { Task } from '../../models';
 import './TaskCard.css';
@@ -8,9 +8,10 @@ import './TaskCard.css';
 interface TaskCardProps {
   task: Task;
   columnColor?: string; // Optional prop for column color
+  onEdit?: (task: Task) => void; // Callback for editing task
 }
 
-function TaskCard({ task, columnColor }: TaskCardProps) {
+function TaskCard({ task, columnColor, onEdit }: TaskCardProps) {
   const { theme } = useTheme();
 
   const {
@@ -27,6 +28,12 @@ function TaskCard({ task, columnColor }: TaskCardProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit?.(task);
   };
 
   return (
@@ -62,16 +69,29 @@ function TaskCard({ task, columnColor }: TaskCardProps) {
           {task.description}
         </p>
       </div>
-      
-      {/* Drag Handle */}
-      <div 
-        className="task-drag-handle"
-        {...attributes}
-        {...listeners}
-        style={{ color: theme.text.secondary }}
-        title="Drag to move task"
-      >
-        <GripVertical size={25} />
+
+      {/* Task Controls */}
+      <div className="task-card-controls">
+        {/* Edit Button */}
+        <button
+          className="task-edit-btn"
+          onClick={handleEditClick}
+          title="Edit task"
+          style={{ color: theme.text.secondary }}
+        >
+          <Settings size={16} />
+        </button>
+        
+        {/* Drag Handle */}
+        <div 
+          className="task-drag-handle"
+          {...attributes}
+          {...listeners}
+          style={{ color: theme.text.secondary }}
+          title="Drag to move task"
+        >
+          <GripVertical size={20} />
+        </div>
       </div>
     </div>
   );

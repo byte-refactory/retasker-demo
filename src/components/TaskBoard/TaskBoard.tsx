@@ -8,15 +8,15 @@ import {
 } from '@dnd-kit/core';
 import TaskColumn from '../TaskColumn';
 import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
+import SaveEditModal from '../SaveEditModal';
 import TaskCard from '../TaskCard';
-import TrashDropZone from '../TrashDropZone';
 import './TaskBoard.css';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
 import { useDragDrop } from '../../contexts/DragDropContext';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Task } from '../../models';
 
 function TaskBoard(): React.ReactElement {
@@ -27,8 +27,7 @@ function TaskBoard(): React.ReactElement {
     handleDragStart, 
     handleDragOver, 
     handleDragEnd, 
-    handleDragCancel,
-    onTaskDeletion 
+    handleDragCancel
   } = useDragDrop();
 
   // Configure sensors for mobile and desktop support
@@ -49,6 +48,15 @@ function TaskBoard(): React.ReactElement {
   );
   
   const [isManageModalOpen, setManageModalOpen] = useState(false);
+  const [editTask, setEditTask] = useState<{
+    isOpen: boolean;
+    task: Task | null;
+    sourceListId: string;
+  }>({
+    isOpen: false,
+    task: null,
+    sourceListId: '',
+  });
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     task: Task | null;
@@ -60,20 +68,6 @@ function TaskBoard(): React.ReactElement {
     sourceListId: '',
     taskListName: '',
   });
-
-  // Subscribe to task deletion events from drag drop context
-  useEffect(() => {
-    const unsubscribe = onTaskDeletion((_taskId, task, sourceListId, taskListName) => {
-      setDeleteConfirmation({
-        isOpen: true,
-        task,
-        sourceListId,
-        taskListName,
-      });
-    });
-    
-    return unsubscribe;
-  }, [onTaskDeletion]);
 
   const handleDeleteConfirm = () => {
     if (deleteConfirmation.task && deleteConfirmation.sourceListId) {
@@ -93,6 +87,35 @@ function TaskBoard(): React.ReactElement {
       task: null,
       sourceListId: '',
       taskListName: '',
+    });
+  };
+
+  // Edit task handlers
+  const handleEditTask = (task: Task) => {
+    // Find which list the task belongs to
+    for (const taskList of taskLists) {
+      if (taskList.tasks.some(t => t.id === task.id)) {
+        setEditTask({
+          isOpen: true,
+          task,
+          sourceListId: taskList.id,
+        });
+        break;
+      }
+    }
+  };
+
+  const handleEditTaskDelete = () => {
+    if (editTask.task && editTask.sourceListId) {
+      deleteTask(editTask.sourceListId, editTask.task.id);
+    }
+  };
+
+  const handleEditTaskClose = () => {
+    setEditTask({
+      isOpen: false,
+      task: null,
+      sourceListId: '',
     });
   };
 
@@ -123,16 +146,22 @@ function TaskBoard(): React.ReactElement {
             <TaskColumn 
               key={taskList.id} 
               taskList={taskList}
+              onEditTask={handleEditTask}
             />
           ))}
         </div>
 
-        {/* Trash Drop Zone - only visible when dragging */}
-        <TrashDropZone 
-          isVisible={!!activeTask} 
-        />
-
         <ManageTaskListsModal isOpen={isManageModalOpen} onClose={() => setManageModalOpen(false)} />
+        
+        {/* Edit Task Modal */}
+        <SaveEditModal
+          isOpen={editTask.isOpen}
+          onClose={handleEditTaskClose}
+          taskListId={editTask.sourceListId}
+          taskListName={taskLists.find(list => list.id === editTask.sourceListId)?.name || ''}
+          task={editTask.task}
+          onDelete={handleEditTaskDelete}
+        />
         
         {/* Task Delete Confirmation Modal */}
         <TaskDeleteConfirmationModal
