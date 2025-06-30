@@ -71,7 +71,7 @@ function TaskCard({ task, columnColor }: TaskCardProps) {
         style={{ color: theme.text.secondary }}
         title="Drag to move task"
       >
-        <GripVertical size={16} />
+        <GripVertical size={25} />
       </div>
     </div>
   );

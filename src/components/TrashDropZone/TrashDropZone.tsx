@@ -44,24 +44,23 @@ function TrashDropZone({ isVisible }: TrashDropZoneProps) {
 
     if (!isVisible) return null;
 
-    const isActive = isHovered;
-
     return (
         <div
             id="trash"
             ref={setNodeRef}
-            className={`trash-drop-zone ${isActive ? 'trash-drop-zone-over' : ''}`}
+            className={`trash-drop-zone ${isHovered ? 'trash-drop-zone-over' : ''}`}
+            data-is-hovered={isHovered}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             style={{
-                backgroundColor: isActive ? '#ff4444' : theme.background.secondary,
-                borderColor: isActive ? '#ff6666' : theme.border.medium,
-                color: isActive ? '#ffffff' : theme.text.secondary,
+                backgroundColor: isHovered ? '#ff4444' : theme.background.secondary,
+                borderColor: isHovered ? '#ff6666' : theme.border.medium,
+                color: isHovered ? '#ffffff' : theme.text.secondary,
             }}
         >
             <Trash2
                 size={28}
-                className={`trash-icon ${isActive ? 'trash-icon-active' : ''}`}
+                className={`trash-icon ${isHovered ? 'trash-icon-active' : ''}`}
             />
             <span className="trash-text">
                 Drop to Delete

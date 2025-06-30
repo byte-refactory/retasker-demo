@@ -95,7 +95,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
 
     const handleTrashDrop = useCallback((taskId: string): boolean => {
         const trashElement = document.getElementById('trash');
-        const isTrashHovered = trashElement && trashElement.matches(':hover');
+        const isTrashHovered = trashElement && trashElement.dataset.isHovered === 'true';
 
         if (isTrashHovered) {
             // Find source list and task

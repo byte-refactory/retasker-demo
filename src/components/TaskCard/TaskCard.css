@@ -9,7 +9,6 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  cursor: grab;
   user-select: none; /* Prevent text selection on drag */
   touch-action: none; /* Disable touch actions like scrolling during drag */
 }
