@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import type { TaskList, Task } from '../../models';
 import { getContrastTextColor } from '../../utils';
 import TaskCard from '../TaskCard';
-import SaveEditModal from '../SaveEditModal';
+import SaveTaskModal from '../SaveTaskModal';
 import useModal from '../../hooks/useModal';
 import { useTheme } from '../../contexts/ThemeContext';
 import './TaskColumn.css';
@@ -92,7 +92,7 @@ function TaskColumn({ taskList, onEditTask }: TaskColumnProps) {
     </section>
 
       {/* Create Task Modal */}
-      <SaveEditModal
+      <SaveTaskModal
         isOpen={createTaskModal.isOpen}
         onClose={createTaskModal.close}
         taskListId={taskList.id}

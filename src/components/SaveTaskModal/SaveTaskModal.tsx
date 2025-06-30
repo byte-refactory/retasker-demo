@@ -4,10 +4,10 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
 import Modal from '../Modal';
 import type { Task } from '../../models';
-import './SaveEditModal.css';
+import './SaveTaskModal.css';
 import '../Modal/ModalShared.css';
 
-interface SaveEditModalProps {
+interface SaveTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   taskListId: string;
@@ -16,14 +16,14 @@ interface SaveEditModalProps {
   onDelete?: () => void; // Optional delete handler for edit mode
 }
 
-export default function SaveEditModal({ 
+export default function SaveTaskModal({ 
   isOpen, 
   onClose, 
   taskListId, 
   taskListName, 
   task, 
   onDelete 
-}: SaveEditModalProps) {
+}: SaveTaskModalProps) {
   const { theme } = useTheme();
   const { createTask, updateTask } = useTaskLists();
   const [formData, setFormData] = useState({
@@ -89,10 +89,10 @@ export default function SaveEditModal({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="medium">
-      <div className="save-edit-modal">
+      <div className="save-task-modal">
         {/* Header */}
-        <div className="save-edit-modal-header">
-          <h2 className="save-edit-modal-title" style={{ color: theme.text.primary }}>
+        <div className="save-task-modal-header">
+          <h2 className="save-task-modal-title" style={{ color: theme.text.primary }}>
             {modalTitle}
           </h2>
           <button
@@ -106,11 +106,11 @@ export default function SaveEditModal({
         </div>
 
         {/* Form */}
-        <form className="save-edit-modal-form" onSubmit={handleSubmit}>
+        <form className="save-task-modal-form" onSubmit={handleSubmit}>
           <div>
             <label
               htmlFor="task-title"
-              className="save-edit-modal-label"
+              className="save-task-modal-label"
               style={{ color: theme.text.primary }}
             >
               Task Title *
@@ -121,7 +121,7 @@ export default function SaveEditModal({
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Enter task title..."
-              className="save-edit-modal-input"
+              className="save-task-modal-input"
               style={{
                 border: `1px solid ${theme.border.medium}`,
                 backgroundColor: theme.background.primary,
@@ -134,7 +134,7 @@ export default function SaveEditModal({
           <div>
             <label
               htmlFor="task-description"
-              className="save-edit-modal-label"
+              className="save-task-modal-label"
               style={{ color: theme.text.primary }}
             >
               Description
@@ -145,7 +145,7 @@ export default function SaveEditModal({
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Enter task description (optional)..."
               rows={3}
-              className="save-edit-modal-textarea"
+              className="save-task-modal-textarea"
               style={{
                 border: `1px solid ${theme.border.medium}`,
                 backgroundColor: theme.background.primary,
@@ -155,7 +155,7 @@ export default function SaveEditModal({
           </div>
 
           {/* Footer */}
-          <div className="save-edit-modal-footer">
+          <div className="save-task-modal-footer">
             {/* Delete button - only show in edit mode */}
             {isEditMode && onDelete && (
               <div className="footer-left">
@@ -183,7 +183,7 @@ export default function SaveEditModal({
               <button
                 type="submit"
                 disabled={!formData.title.trim()}
-                className="save-edit-modal-submit-btn"
+                className="save-task-modal-submit-btn"
                 style={{
                   border: `1px solid ${theme.interactive.primary}`,
                   backgroundColor: theme.interactive.primary,

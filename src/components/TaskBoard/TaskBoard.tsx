@@ -8,7 +8,7 @@ import {
 } from '@dnd-kit/core';
 import TaskColumn from '../TaskColumn';
 import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
-import SaveEditModal from '../SaveEditModal';
+import SaveTaskModal from '../SaveTaskModal';
 import TaskCard from '../TaskCard';
 import './TaskBoard.css';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -39,9 +39,9 @@ function TaskBoard(): React.ReactElement {
       },
     }),
     useSensor(TouchSensor, {
-      // Press delay of 250ms, with tolerance of 5px of movement
+      // Press delay of 50ms, with tolerance of 5px of movement
       activationConstraint: {
-        delay: 250,
+        delay: 50,
         tolerance: 5,
       },
     })
@@ -159,7 +159,7 @@ function TaskBoard(): React.ReactElement {
         <ManageTaskListsModal isOpen={isManageModalOpen} onClose={() => setManageModalOpen(false)} />
         
         {/* Edit Task Modal */}
-        <SaveEditModal
+        <SaveTaskModal
           key={editTask.task?.id || 'create'}
           isOpen={editTask.isOpen}
           onClose={handleEditTaskClose}
