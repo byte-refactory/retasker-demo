@@ -10,7 +10,6 @@
   align-items: flex-start;
   gap: 8px;
   user-select: none; /* Prevent text selection on drag */
-  touch-action: none; /* Disable touch actions like scrolling during drag */
 }
 
 .task-card:active {

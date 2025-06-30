@@ -111,16 +111,21 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         // If we're in the same container, let SortableContext handle it
         if (activeContainer === overContainer) return;
 
-        // Move the task to the new container for preview
+        // Only move for cross-container drag if we're actually changing containers
+        // This prevents redundant state updates that could cause infinite re-renders
         const activeList = taskLists.find(list => list.id === activeContainer);
         const overList = taskLists.find(list => list.id === overContainer);
 
         if (!activeList || !overList) return;
 
         const activeTask = activeList.tasks.find(t => t.id === activeId);
-        const overTaskIndex = overList.tasks.findIndex(t => t.id === overId);
-
         if (!activeTask) return;
+
+        // Check if the task is already in the target container to avoid redundant moves
+        const taskAlreadyInTarget = overList.tasks.some(t => t.id === activeId);
+        if (taskAlreadyInTarget) return;
+
+        const overTaskIndex = overList.tasks.findIndex(t => t.id === overId);
 
         // Determine the insertion index
         let insertIndex = overList.tasks.length;
@@ -142,7 +147,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         dragEndCallbacks.forEach(callback => callback());
 
         if (!over) {
-            // If dropped outside, restore original state
+            // If dropped outside, do nothing
             return;
         }
 

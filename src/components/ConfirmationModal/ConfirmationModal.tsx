@@ -81,7 +81,12 @@ export default function ConfirmationModal({
             className="confirmation-modal-confirm-btn"
             type="button"
             onClick={handleConfirm}
-            style={{ background: getVariantColor(), color: theme.text.inverse }}
+            style={{
+              border: `1px solid ${getVariantColor()}`,
+              backgroundColor: getVariantColor(),
+              color: 'white',
+              cursor: 'pointer',
+            }}
           >
             {confirmText}
           </button>

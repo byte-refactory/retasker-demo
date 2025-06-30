@@ -3,6 +3,7 @@ import { X, Trash2 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTaskLists } from '../../contexts/TaskListsContext';
 import Modal from '../Modal';
+import ConfirmationModal from '../ConfirmationModal';
 import type { Task } from '../../models';
 import './SaveTaskModal.css';
 import '../Modal/ModalShared.css';
@@ -30,6 +31,7 @@ export default function SaveTaskModal({
     title: '',
     description: ''
   });
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   const isEditMode = !!task;
 
@@ -50,7 +52,7 @@ export default function SaveTaskModal({
         });
       }
     }
-  }, [isOpen, task?.id, task?.title, task?.description]);
+  }, [isOpen, task]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,10 +75,19 @@ export default function SaveTaskModal({
   };
 
   const handleDelete = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleDeleteConfirm = () => {
     if (onDelete) {
       onDelete();
       handleClose();
     }
+    setShowDeleteConfirmation(false);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmation(false);
   };
 
   const handleClose = () => {
@@ -88,7 +99,8 @@ export default function SaveTaskModal({
   const submitButtonText = isEditMode ? 'Save Changes' : 'Add Task';
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="medium">
+    <>
+      <Modal isOpen={isOpen} onClose={handleClose} size="medium">
       <div className="save-task-modal">
         {/* Header */}
         <div className="save-task-modal-header">
@@ -158,25 +170,23 @@ export default function SaveTaskModal({
           <div className="save-task-modal-footer">
             {/* Delete button - only show in edit mode */}
             {isEditMode && onDelete && (
-              <div className="footer-left">
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="delete-task-btn"
-                  title="Delete task"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="delete-task-btn"
+                title="Delete task"
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
             )}
             
-            <div className="footer-right">
+            <div className="footer-buttons">
               <button
                 type="button"
                 onClick={handleClose}
                 className="modal-footer-btn"
-                style={{ color: theme.text.primary }}
+                style={{ color: theme.text.secondary }}
               >
                 Cancel
               </button>
@@ -187,6 +197,7 @@ export default function SaveTaskModal({
                 style={{
                   border: `1px solid ${theme.interactive.primary}`,
                   backgroundColor: theme.interactive.primary,
+                  color: theme.text.inverse,
                   opacity: formData.title.trim() ? 1 : 0.6,
                 }}
               >
@@ -196,6 +207,19 @@ export default function SaveTaskModal({
           </div>
         </form>
       </div>
-    </Modal>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirmation}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${task?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+    </>
   );
 }

@@ -7,7 +7,6 @@ import {
   useSensors 
 } from '@dnd-kit/core';
 import TaskColumn from '../TaskColumn';
-import TaskDeleteConfirmationModal from '../TaskDeleteConfirmationModal';
 import SaveTaskModal from '../SaveTaskModal';
 import TaskCard from '../TaskCard';
 import './TaskBoard.css';
@@ -16,7 +15,7 @@ import { useTaskLists } from '../../contexts/TaskListsContext';
 import { useDragDrop } from '../../contexts/DragDropContext';
 import { Settings } from 'lucide-react';
 import ManageTaskListsModal from '../ManageTaskListsModal';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import type { Task } from '../../models';
 
 function TaskBoard(): React.ReactElement {
@@ -30,22 +29,23 @@ function TaskBoard(): React.ReactElement {
     handleDragCancel
   } = useDragDrop();
 
-  // Configure sensors for mobile and desktop support
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      // Require the mouse to move by 10 pixels before activating
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      // Press delay of 50ms, with tolerance of 5px of movement
-      activationConstraint: {
-        delay: 50,
-        tolerance: 5,
-      },
-    })
-  );
+  // Configure sensors for mobile and desktop support - hooks must be at top level
+  const mouseSensor = useSensor(MouseSensor, {
+    // Require the mouse to move by 10 pixels before activating
+    activationConstraint: {
+      distance: 10,
+    },
+  });
+  
+  const touchSensor = useSensor(TouchSensor, {
+    // Press delay of 50ms, with tolerance of 5px of movement
+    activationConstraint: {
+      delay: 50,
+      tolerance: 5,
+    },
+  });
+  
+  const sensors = useSensors(mouseSensor, touchSensor);
   
   const [isManageModalOpen, setManageModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<{
@@ -57,57 +57,33 @@ function TaskBoard(): React.ReactElement {
     task: null,
     sourceListId: '',
   });
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{
-    isOpen: boolean;
-    task: Task | null;
-    sourceListId: string;
-    taskListName: string;
-  }>({
-    isOpen: false,
-    task: null,
-    sourceListId: '',
-    taskListName: '',
-  });
 
-  const handleDeleteConfirm = () => {
-    if (deleteConfirmation.task && deleteConfirmation.sourceListId) {
-      deleteTask(deleteConfirmation.sourceListId, deleteConfirmation.task.id);
-    }
-    setDeleteConfirmation({
-      isOpen: false,
-      task: null,
-      sourceListId: '',
-      taskListName: '',
-    });
-  };
 
-  const handleDeleteCancel = () => {
-    setDeleteConfirmation({
-      isOpen: false,
-      task: null,
-      sourceListId: '',
-      taskListName: '',
-    });
-  };
-
-  // Edit task handlers
+  // Edit task handlers - without useCallback to prevent dependency issues
   const handleEditTask = (task: Task) => {
     // Find which list the task belongs to
-    for (const taskList of taskLists) {
-      if (taskList.tasks.some(t => t.id === task.id)) {
-        setEditTask({
-          isOpen: true,
-          task,
-          sourceListId: taskList.id,
-        });
-        break;
-      }
+    const sourceList = taskLists.find(list => 
+      list.tasks.some(t => t.id === task.id)
+    );
+    
+    if (sourceList) {
+      setEditTask({
+        isOpen: true,
+        task,
+        sourceListId: sourceList.id,
+      });
     }
   };
 
   const handleEditTaskDelete = () => {
-    if (editTask.task && editTask.sourceListId) {
+    if (editTask.task?.id && editTask.sourceListId) {
       deleteTask(editTask.sourceListId, editTask.task.id);
+      // Close the modal after deletion
+      setEditTask({
+        isOpen: false,
+        task: null,
+        sourceListId: '',
+      });
     }
   };
 
@@ -119,10 +95,10 @@ function TaskBoard(): React.ReactElement {
     });
   };
 
-  // Memoize the task list name to prevent unnecessary re-renders
-  const editTaskListName = useMemo(() => {
-    return taskLists.find(list => list.id === editTask.sourceListId)?.name || '';
-  }, [taskLists, editTask.sourceListId]);
+  // Get the task list name directly without memoization to avoid dependency issues
+  const editTaskListName = editTask.sourceListId 
+    ? taskLists.find(list => list.id === editTask.sourceListId)?.name || ''
+    : '';
 
   return (
     <DndContext
@@ -160,22 +136,12 @@ function TaskBoard(): React.ReactElement {
         
         {/* Edit Task Modal */}
         <SaveTaskModal
-          key={editTask.task?.id || 'create'}
           isOpen={editTask.isOpen}
           onClose={handleEditTaskClose}
           taskListId={editTask.sourceListId}
           taskListName={editTaskListName}
           task={editTask.task}
           onDelete={handleEditTaskDelete}
-        />
-        
-        {/* Task Delete Confirmation Modal */}
-        <TaskDeleteConfirmationModal
-          isOpen={deleteConfirmation.isOpen}
-          onClose={handleDeleteCancel}
-          onConfirm={handleDeleteConfirm}
-          task={deleteConfirmation.task}
-          taskListName={deleteConfirmation.taskListName}
         />
       </main>
 

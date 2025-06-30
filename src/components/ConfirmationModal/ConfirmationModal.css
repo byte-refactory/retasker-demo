@@ -39,3 +39,18 @@
   padding: 8px 16px;
   border-radius: 4px;
 }
+
+.confirmation-modal-confirm-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.confirmation-modal-confirm-btn:hover {
+  opacity: 0.9;
+}
+
+.confirmation-modal-confirm-btn:focus {
+  outline: 2px solid rgba(0, 0, 0, 0.2);
+  outline-offset: 2px;
+}

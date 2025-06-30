@@ -5,10 +5,11 @@ import './ManageTaskListsModal.css';
 import '../Modal/ModalShared.css';
 import { useTaskLists } from '../../contexts/TaskListsContext';
 import { ListEdit } from '../ListEdit';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getRandomColor } from '../../utils/colorUtils';
 import type { ItemReference } from '../ListEdit/ListEditItem';
 import type { TaskList } from '../../models/TaskList';
+import ConfirmationModal from '../ConfirmationModal';
 
 interface ManageTaskListsModalProps {
   isOpen: boolean;
@@ -19,14 +20,18 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
   const { theme } = useTheme();
   const { taskLists, updateTaskList, createTaskList, reorderTaskLists, resetToDefaults } = useTaskLists();
   const [taskListItems, setTaskListItems] = useState<ItemReference[]>([]);
-  // Only show non-hidden lists
-  const visibleLists = taskLists.filter(l => !(l as any).hidden);
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  // Only show non-hidden lists - memoized to prevent unnecessary re-renders
+  const visibleLists = useMemo(() => 
+    taskLists.filter(l => !(l as any).hidden), 
+    [taskLists.map(l => l.id + l.name + (l as any).hidden).join(',')]
+  );
   
   useEffect(() => {
     if (isOpen) {
       setTaskListItems(visibleLists.map(l => ({ id: l.id, name: l.name })));
     }
-  }, [isOpen, taskLists]);
+  }, [isOpen, visibleLists]);
 
   // Validation logic
   const getValidationError = () => {
@@ -131,12 +136,22 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
   };
 
   const handleResetToDefaults = () => {
+    setShowResetConfirmation(true);
+  };
+
+  const handleResetConfirm = () => {
     resetToDefaults();
+    setShowResetConfirmation(false);
     onClose();
   };
 
+  const handleResetCancel = () => {
+    setShowResetConfirmation(false);
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose}>
       <div className="manage-task-lists-modal">
         <div className="manage-task-lists-modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 className="manage-task-lists-modal-title" style={{ color: theme.text.primary, margin: 0 }}>
@@ -167,7 +182,7 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
             <button 
               className="modal-footer-btn" 
               onClick={onClose} 
-              style={{ color: theme.text.primary }}
+              style={{ color: theme.text.secondary }}
             >
               Cancel
             </button>
@@ -189,6 +204,19 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
           </div>
         </div>
       </div>
-    </Modal>
+      </Modal>
+
+      {/* Reset Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showResetConfirmation}
+        onClose={handleResetCancel}
+        onConfirm={handleResetConfirm}
+        title="Reset to Defaults"
+        message="Are you sure you want to reset all task lists to the default configuration? This will delete all your custom task lists and tasks. This action cannot be undone."
+        confirmText="Reset"
+        cancelText="Cancel"
+        variant="danger"
+      />
+    </>
   );
 }

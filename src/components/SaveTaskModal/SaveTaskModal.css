@@ -60,15 +60,11 @@
   gap: 12px;
 }
 
-.footer-left {
-  display: flex;
-  align-items: center;
-}
-
-.footer-right {
+.footer-buttons {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
 }
 
 .delete-task-btn {
