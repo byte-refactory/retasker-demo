@@ -40,14 +40,13 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     // State
     const [isDragging, setIsDragging] = useState(false);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
-    const [clonedTaskLists, setClonedTaskLists] = useState<typeof taskLists | null>(null);
 
     // Event subscribers
     const [dragStartCallbacks, setDragStartCallbacks] = useState<DragStartCallback[]>([]);
     const [dragEndCallbacks, setDragEndCallbacks] = useState<DragEndCallback[]>([]);
 
     // Helper function to find container
-    const findContainer = useCallback((taskId: string) => {
+    const findContainerIdByTaskId = useCallback((taskId: string) => {
         for (const list of taskLists) {
             if (list.tasks.find(t => t.id === taskId)) {
                 return list.id;
@@ -79,8 +78,6 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const taskId = active.id as string;
 
         setIsDragging(true);
-        // Clone the current state to allow restoration if drag is cancelled
-        setClonedTaskLists(taskLists);
 
         // Find the active task
         for (const list of taskLists) {
@@ -103,18 +100,22 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const overId = over.id as string;
 
         // Find the active and over containers
-        const activeContainer = findContainer(activeId);
-        const overContainer = findContainer(overId) || overId; // overId might be a container itself
+        const activeContainerId = findContainerIdByTaskId(activeId);
 
-        if (!activeContainer || !overContainer) return;
+        // If over is a droppable area, it might not have a task ID, so we use the ID directly
+        let overContainerId = findContainerIdByTaskId(overId);
+        const overTaskId = overContainerId ? overId : null;
+        overContainerId = overContainerId || overId;
+
+        if (!activeContainerId || !overContainerId) return;
 
         // If we're in the same container, let SortableContext handle it
-        if (activeContainer === overContainer) return;
+        if (activeContainerId === overContainerId) return;
 
         // Only move for cross-container drag if we're actually changing containers
         // This prevents redundant state updates that could cause infinite re-renders
-        const activeList = taskLists.find(list => list.id === activeContainer);
-        const overList = taskLists.find(list => list.id === overContainer);
+        const activeList = taskLists.find(list => list.id === activeContainerId);
+        const overList = taskLists.find(list => list.id === overContainerId);
 
         if (!activeList || !overList) return;
 
@@ -125,23 +126,16 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const taskAlreadyInTarget = overList.tasks.some(t => t.id === activeId);
         if (taskAlreadyInTarget) return;
 
-        const overTaskIndex = overList.tasks.findIndex(t => t.id === overId);
+        const overTaskIndex = overTaskId ? overList.tasks.findIndex(t => t.id === overId) : 0;
 
-        // Determine the insertion index
-        let insertIndex = overList.tasks.length;
-        if (overTaskIndex !== -1) {
-            insertIndex = overTaskIndex;
-        }
-
-        moveTaskToPosition(activeContainer, overContainer, activeId, insertIndex);
-    }, [taskLists, findContainer, moveTaskToPosition]);
+        moveTaskToPosition(activeContainerId, overContainerId, activeId, overTaskIndex);
+    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
 
         setIsDragging(false);
         setActiveTask(null);
-        setClonedTaskLists(null);
 
         // Notify drag end subscribers
         dragEndCallbacks.forEach(callback => callback());
@@ -155,8 +149,8 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const overId = over.id as string;
 
         // Handle within-column sorting that wasn't handled by onDragOver
-        const activeContainer = findContainer(taskId);
-        const overContainer = findContainer(overId) || overId;
+        const activeContainer = findContainerIdByTaskId(taskId);
+        const overContainer = findContainerIdByTaskId(overId) || overId;
 
         if (activeContainer && overContainer && activeContainer === overContainer) {
             // This is within-column sorting - handle it here
@@ -173,22 +167,11 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
 
         // For cross-container drops, the onDragOver handler has already moved the task
         // The position is now final
-    }, [taskLists, findContainer, moveTaskToPosition, dragEndCallbacks]);
+    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition, dragEndCallbacks]);
 
     const handleDragCancel = useCallback(() => {
-        // Restore original state if drag was cancelled
-        if (clonedTaskLists) {
-            // Note: In a real app, you'd restore the state here
-            // For this demo, we'll just clear the active task
-        }
 
-        setIsDragging(false);
-        setActiveTask(null);
-        setClonedTaskLists(null);
-
-        // Notify drag end subscribers
-        dragEndCallbacks.forEach(callback => callback());
-    }, [clonedTaskLists, dragEndCallbacks]);
+    }, []);
 
     const contextValue: DragDropContextType = {
         // State
