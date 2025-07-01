@@ -4,10 +4,6 @@ import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core'
 import type { Task } from '../models';
 import { useTaskLists } from './TaskListsContext';
 
-// Event subscription types
-type DragStartCallback = (task: Task) => void;
-type DragEndCallback = () => void;
-
 // DragDrop context type
 interface DragDropContextType {
     // State
@@ -19,10 +15,6 @@ interface DragDropContextType {
     handleDragOver: (event: DragOverEvent) => void;
     handleDragEnd: (event: DragEndEvent) => void;
     handleDragCancel: () => void;
-
-    // Event subscriptions
-    onDragStart: (callback: DragStartCallback) => () => void;
-    onDragEnd: (callback: DragEndCallback) => () => void;
 }
 
 // Create context
@@ -41,10 +33,6 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-    // Event subscribers
-    const [dragStartCallbacks, setDragStartCallbacks] = useState<DragStartCallback[]>([]);
-    const [dragEndCallbacks, setDragEndCallbacks] = useState<DragEndCallback[]>([]);
-
     // Helper function to find container
     const findContainerIdByTaskId = useCallback((taskId: string) => {
         for (const list of taskLists) {
@@ -54,23 +42,6 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         }
         return null;
     }, [taskLists]);
-
-    // Event subscription functions
-    const onDragStart = useCallback((callback: DragStartCallback) => {
-        setDragStartCallbacks(prev => [...prev, callback]);
-
-        return () => {
-            setDragStartCallbacks(prev => prev.filter(cb => cb !== callback));
-        };
-    }, []);
-
-    const onDragEnd = useCallback((callback: DragEndCallback) => {
-        setDragEndCallbacks(prev => [...prev, callback]);
-
-        return () => {
-            setDragEndCallbacks(prev => prev.filter(cb => cb !== callback));
-        };
-    }, []);
 
     // Drag event handlers
     const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -84,12 +55,10 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
             const task = list.tasks.find(t => t.id === taskId);
             if (task) {
                 setActiveTask(task);
-                // Notify subscribers
-                dragStartCallbacks.forEach(callback => callback(task));
                 break;
             }
         }
-    }, [taskLists, dragStartCallbacks]);
+    }, [taskLists]);
 
     const handleDragOver = useCallback((event: DragOverEvent) => {
         const { active, over } = event;
@@ -137,9 +106,6 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         setIsDragging(false);
         setActiveTask(null);
 
-        // Notify drag end subscribers
-        dragEndCallbacks.forEach(callback => callback());
-
         if (!over) {
             // If dropped outside, do nothing
             return;
@@ -167,7 +133,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
 
         // For cross-container drops, the onDragOver handler has already moved the task
         // The position is now final
-    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition, dragEndCallbacks]);
+    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition]);
 
     const handleDragCancel = useCallback(() => {
 
@@ -182,11 +148,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         handleDragStart,
         handleDragOver,
         handleDragEnd,
-        handleDragCancel,
-
-        // Event subscriptions
-        onDragStart,
-        onDragEnd,
+        handleDragCancel
     };
 
     return (
