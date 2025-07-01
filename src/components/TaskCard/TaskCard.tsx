@@ -4,6 +4,7 @@ import { GripVertical, Settings } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import type { Task } from '../../models';
 import './TaskCard.css';
+import { useCallback } from 'react';
 
 interface TaskCardProps {
   task: Task;
@@ -30,11 +31,11 @@ function TaskCard({ task, columnColor, onEdit }: TaskCardProps) {
     transition,
   };
 
-  const handleEditClick = (e: React.MouseEvent) => {
+  const handleEditClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onEdit?.(task);
-  };
+  }, [onEdit, task]);
 
   return (
     <div 
