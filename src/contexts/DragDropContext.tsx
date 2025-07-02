@@ -1,8 +1,17 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { 
+  DndContext, 
+  DragOverlay, 
+  TouchSensor, 
+  MouseSensor, 
+  useSensor, 
+  useSensors 
+} from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import type { Task } from '../models';
 import { useTaskLists } from './TaskListsContext';
+import TaskCard from '../components/TaskCard';
 
 // DragDrop context type
 interface DragDropContextType {
@@ -32,6 +41,24 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     // State
     const [isDragging, setIsDragging] = useState(false);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+    // Configure sensors for mobile and desktop support
+    const mouseSensor = useSensor(MouseSensor, {
+        // Require the mouse to move by 10 pixels before activating
+        activationConstraint: {
+            distance: 10,
+        },
+    });
+    
+    const touchSensor = useSensor(TouchSensor, {
+        // Press delay of 100ms for better mobile performance, with tolerance of 8px of movement
+        activationConstraint: {
+            delay: 100,
+            tolerance: 8,
+        },
+    });
+    
+    const sensors = useSensors(mouseSensor, touchSensor);
 
     // Helper function to find container
     const findContainerIdByTaskId = useCallback((taskId: string) => {
@@ -136,7 +163,8 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     }, [taskLists, findContainerIdByTaskId, moveTaskToPosition]);
 
     const handleDragCancel = useCallback(() => {
-
+        setIsDragging(false);
+        setActiveTask(null);
     }, []);
 
     const contextValue: DragDropContextType = {
@@ -153,7 +181,22 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
 
     return (
         <DragDropContext.Provider value={contextValue}>
-            {children}
+            <DndContext
+                sensors={sensors}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+            >
+                {children}
+
+                {/* Drag Overlay */}
+                <DragOverlay>
+                    {activeTask ? (
+                        <TaskCard task={activeTask} />
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
         </DragDropContext.Provider>
     );
 }
