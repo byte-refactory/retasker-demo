@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import TaskCard from '../components/TaskCard';
 import { 
   DndContext, 
-  // DragOverlay, 
+  DragOverlay, 
   TouchSensor, 
   MouseSensor, 
   useSensor, 
-  useSensors 
+  useSensors
 } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import type { Task } from '../models';
@@ -239,6 +240,12 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
             >
                 {children}
 
+                {/* Drag Overlay */}
+                <DragOverlay>
+                    {activeTask ? (
+                        <TaskCard task={activeTask} />
+                    ) : null}
+                </DragOverlay>
             </DndContext>
         </DragDropContext.Provider>
     );
