@@ -114,7 +114,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         moveTaskToPosition(activeContainerId, overContainerId, activeId, overTaskIndex);
     }, [findContainerIdByTaskId, moveTaskToPosition, taskLists]);
 
-    // React-style continuous timer using useEffect
+    // Keep checking for pending drag events at a regular interval
     useEffect(() => {
         const timer = setInterval(() => {            
             // Only process if we're currently dragging
