@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { 
   DndContext, 
-  DragOverlay, 
+  // DragOverlay, 
   TouchSensor, 
   MouseSensor, 
   useSensor, 
@@ -11,7 +11,6 @@ import {
 import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import type { Task } from '../models';
 import { useTaskLists } from './TaskListsContext';
-import TaskCard from '../components/TaskCard';
 
 // DragDrop context type
 interface DragDropContextType {
@@ -41,7 +40,11 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     // State
     const [isDragging, setIsDragging] = useState(false);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
-    const [lastDragPair, setLastDragPair] = useState<{activeId: string, overId: string} | null>(null);
+    
+    // Batched drag processing
+    const pendingDragEvent = useRef<DragOverEvent | null>(null);
+    const lastProcessedEventId = useRef<string>('');
+    const processingInterval = 100; // ms
 
     // Configure sensors for mobile and desktop support
     const mouseSensor = useSensor(MouseSensor, {
@@ -52,9 +55,9 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     });
     
     const touchSensor = useSensor(TouchSensor, {
-        // Press delay of 100ms for better mobile performance, with tolerance of 8px of movement
+        // Press delay of 10ms for better mobile performance, with tolerance of 8px of movement
         activationConstraint: {
-            delay: 100,
+            delay: 10,
             tolerance: 8,
         },
     });
@@ -71,35 +74,14 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         return null;
     }, [taskLists]);
 
-    // Drag event handlers
-    const handleDragStart = useCallback((event: DragStartEvent) => {
-        const { active } = event;
-        const taskId = active.id as string;
-
-        setIsDragging(true);
-
-        // Find the active task
-        for (const list of taskLists) {
-            const task = list.tasks.find(t => t.id === taskId);
-            if (task) {
-                setActiveTask(task);
-                break;
-            }
-        }
-    }, [taskLists]);
-
-    const handleDragOver = useCallback((event: DragOverEvent) => {
+    // Process the actual drag logic (separated from event capture)
+    const processDragEvent = useCallback((event: DragOverEvent) => {
         const { active, over } = event;
 
         if (!over) return;
 
         const activeId = active.id as string;
         const overId = over.id as string;
-
-        // Check if this is the same drag pair as last time to prevent loops
-        if (lastDragPair && lastDragPair.activeId === activeId && lastDragPair.overId === overId) {
-            return;
-        }
 
         // Find the active and over containers
         const activeContainerId = findContainerIdByTaskId(activeId);
@@ -115,7 +97,6 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         if (activeContainerId === overContainerId) return;
 
         // Only move for cross-container drag if we're actually changing containers
-        // This prevents redundant state updates that could cause infinite re-renders
         const activeList = taskLists.find(list => list.id === activeContainerId);
         const overList = taskLists.find(list => list.id === overContainerId);
 
@@ -128,20 +109,83 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const taskAlreadyInTarget = overList.tasks.some(t => t.id === activeId);
         if (taskAlreadyInTarget) return;
 
-        // Update the last drag pair to prevent loops
-        setLastDragPair({ activeId, overId });
-
         const overTaskIndex = overTaskId ? overList.tasks.findIndex(t => t.id === overId) : 0;
 
         moveTaskToPosition(activeContainerId, overContainerId, activeId, overTaskIndex);
-    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition, lastDragPair]);
+    }, [findContainerIdByTaskId, moveTaskToPosition, taskLists]);
+
+    // React-style continuous timer using useEffect
+    useEffect(() => {
+        const timer = setInterval(() => {            
+            // Only process if we're currently dragging
+            if (!isDragging) return;
+            
+            if (pendingDragEvent.current) {
+                // Create a unique ID for this event
+                const eventId = `${pendingDragEvent.current.active.id}-${pendingDragEvent.current.over?.id}-${Date.now()}`;
+                
+                // Only process if we haven't processed this exact event
+                if (eventId !== lastProcessedEventId.current) {
+                    processDragEvent(pendingDragEvent.current);
+                    lastProcessedEventId.current = eventId;
+                }
+            }
+        }, processingInterval);
+
+        return () => clearInterval(timer);
+    }, [isDragging, processDragEvent, processingInterval]);
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            lastProcessedEventId.current = '';
+            pendingDragEvent.current = null;
+        };
+    }, []);
+
+    // Drag event handlers
+    const handleDragStart = useCallback((event: DragStartEvent) => {
+        const { active } = event;
+        const taskId = active.id as string;
+
+        setIsDragging(true);
+
+        // Find the active task
+        for (const list of taskLists) {
+            const task = list.tasks.find(t => t.id === taskId);
+            if (task) {
+                setActiveTask(task);
+                break;
+            }
+        }
+
+        // Reset tracking for new drag operation
+        lastProcessedEventId.current = '';
+    }, [taskLists]);
+
+    const handleDragOver = useCallback((event: DragOverEvent) => {
+        const { over } = event;
+
+        if (!over) return;
+
+        // Store the latest event for processing
+        pendingDragEvent.current = event;
+    }, []);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
 
         setIsDragging(false);
         setActiveTask(null);
-        setLastDragPair(null);
+
+        // Reset tracking
+        lastProcessedEventId.current = '';
+        
+        // Process any remaining pending event one final time
+        if (pendingDragEvent.current) {
+            processDragEvent(pendingDragEvent.current);
+            pendingDragEvent.current = null;
+        }
 
         if (!over) {
             // If dropped outside, do nothing
@@ -155,27 +199,21 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const activeContainer = findContainerIdByTaskId(taskId);
         const overContainer = findContainerIdByTaskId(overId) || overId;
 
-        if (activeContainer && overContainer && activeContainer === overContainer) {
-            // This is within-column sorting - handle it here
-            const containerList = taskLists.find(list => list.id === activeContainer);
-            if (containerList) {
-                const activeIndex = containerList.tasks.findIndex(t => t.id === taskId);
-                const overIndex = containerList.tasks.findIndex(t => t.id === overId);
+        const overList = taskLists.find(list => list.id === overContainer);
 
-                if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
-                    moveTaskToPosition(activeContainer, activeContainer, taskId, overIndex);
-                }
-            }
+        if(overList && activeContainer && overContainer) {
+            const overIndex = overList.tasks.findIndex(t => t.id === overId) ?? 0;
+            moveTaskToPosition(activeContainer, overContainer, taskId, overIndex);
         }
-
-        // For cross-container drops, the onDragOver handler has already moved the task
-        // The position is now final
-    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition]);
+    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition, processDragEvent]);
 
     const handleDragCancel = useCallback(() => {
         setIsDragging(false);
         setActiveTask(null);
-        setLastDragPair(null);
+        
+        // Reset tracking
+        lastProcessedEventId.current = '';
+        pendingDragEvent.current = null;
     }, []);
 
     const contextValue: DragDropContextType = {
@@ -201,12 +239,6 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
             >
                 {children}
 
-                {/* Drag Overlay */}
-                <DragOverlay>
-                    {activeTask ? (
-                        <TaskCard task={activeTask} />
-                    ) : null}
-                </DragOverlay>
             </DndContext>
         </DragDropContext.Provider>
     );
