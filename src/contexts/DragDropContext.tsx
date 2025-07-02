@@ -41,6 +41,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     // State
     const [isDragging, setIsDragging] = useState(false);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const [lastDragPair, setLastDragPair] = useState<{activeId: string, overId: string} | null>(null);
 
     // Configure sensors for mobile and desktop support
     const mouseSensor = useSensor(MouseSensor, {
@@ -95,6 +96,11 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const activeId = active.id as string;
         const overId = over.id as string;
 
+        // Check if this is the same drag pair as last time to prevent loops
+        if (lastDragPair && lastDragPair.activeId === activeId && lastDragPair.overId === overId) {
+            return;
+        }
+
         // Find the active and over containers
         const activeContainerId = findContainerIdByTaskId(activeId);
 
@@ -122,16 +128,20 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
         const taskAlreadyInTarget = overList.tasks.some(t => t.id === activeId);
         if (taskAlreadyInTarget) return;
 
+        // Update the last drag pair to prevent loops
+        setLastDragPair({ activeId, overId });
+
         const overTaskIndex = overTaskId ? overList.tasks.findIndex(t => t.id === overId) : 0;
 
         moveTaskToPosition(activeContainerId, overContainerId, activeId, overTaskIndex);
-    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition]);
+    }, [taskLists, findContainerIdByTaskId, moveTaskToPosition, lastDragPair]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
 
         setIsDragging(false);
         setActiveTask(null);
+        setLastDragPair(null);
 
         if (!over) {
             // If dropped outside, do nothing
@@ -165,6 +175,7 @@ export function DragDropProvider({ children }: DragDropProviderProps) {
     const handleDragCancel = useCallback(() => {
         setIsDragging(false);
         setActiveTask(null);
+        setLastDragPair(null);
     }, []);
 
     const contextValue: DragDropContextType = {
