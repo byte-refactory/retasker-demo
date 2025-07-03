@@ -23,9 +23,9 @@ function TaskBoard(): React.ReactElement {
     sourceListId: '',
   });
 
-  // Memoize visible task lists to prevent unnecessary re-renders
+  // Memoize task lists to prevent unnecessary re-renders
   const visibleTaskLists = useMemo(() => 
-    taskLists.filter(t => !t.hidden), 
+    taskLists, 
     [taskLists]
   );
 

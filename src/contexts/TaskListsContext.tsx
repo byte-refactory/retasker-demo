@@ -27,7 +27,6 @@ const getDefaults = (): TaskList[] => {
         {
             id: crypto.randomUUID(),
             name: 'To Do',
-            hidden: false,
             color: '#007bff',
             tasks: [],
             createdAt: new Date(),
@@ -36,7 +35,6 @@ const getDefaults = (): TaskList[] => {
         {
             id: crypto.randomUUID(),
             name: 'In Progress',
-            hidden: false,
             color: '#28a745',
             tasks: [],
             createdAt: new Date(),
@@ -45,7 +43,6 @@ const getDefaults = (): TaskList[] => {
         {
             id: crypto.randomUUID(),
             name: 'Done',
-            hidden: false,
             color: '#6c757d',
             tasks: [],
             createdAt: new Date(),
@@ -278,12 +275,11 @@ export function TaskListProvider({ children }: TaskListProviderProps) {
 
     const reorderTaskLists = (orderedIds: string[]) => {
         setTaskLists(prev => {
-            const visible = prev.filter(l => !l.hidden);
-            const hidden = prev.filter(l => l.hidden);
+            // Simply reorder all task lists according to the provided order
             const reordered = orderedIds
-                .map(id => visible.find(l => l.id === id))
+                .map(id => prev.find(l => l.id === id))
                 .filter(Boolean) as TaskList[];
-            return [...reordered, ...hidden];
+            return reordered;
         });
     };
 

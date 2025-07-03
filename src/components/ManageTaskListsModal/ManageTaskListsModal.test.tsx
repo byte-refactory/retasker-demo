@@ -19,7 +19,7 @@ describe('ManageTaskListsModal', () => {
   });  it('can add a new task list', async () => {
     // First add some default lists to localStorage so we have input fields
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -44,7 +44,7 @@ describe('ManageTaskListsModal', () => {
   });  it('can rename a task list', async () => {
     // First add some default lists to localStorage
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -60,8 +60,8 @@ describe('ManageTaskListsModal', () => {
   it('can hide (remove) a task list', async () => {
     // First add some default lists to localStorage
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: '2', name: 'In Progress', color: '#28a745', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2', name: 'In Progress', color: '#28a745', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -76,8 +76,8 @@ describe('ManageTaskListsModal', () => {
   it('can reorder task lists', async () => {
     // First add some default lists to localStorage
     const defaultLists = [
-      { id: '1', name: 'List A', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: '2', name: 'List B', color: '#28a745', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'List A', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2', name: 'List B', color: '#28a745', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -104,7 +104,7 @@ describe('ManageTaskListsModal', () => {
 
   it('disables save button when task list names are blank', async () => {
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -119,8 +119,8 @@ describe('ManageTaskListsModal', () => {
 
   it('disables save button when task list names are duplicated', async () => {
     const defaultLists = [
-      { id: '1', name: 'List A', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: '2', name: 'List B', color: '#28a745', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'List A', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: '2', name: 'List B', color: '#28a745', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     
@@ -135,7 +135,7 @@ describe('ManageTaskListsModal', () => {
 
   it('shows error styling on invalid input fields', async () => {
     const defaultLists = [
-      { id: '1', name: 'To Do', color: '#007bff', tasks: [], hidden: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      { id: '1', name: 'To Do', color: '#007bff', tasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ];
     localStorage.setItem('retasker_task_lists', JSON.stringify(defaultLists));
     

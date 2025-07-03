@@ -18,20 +18,21 @@ interface ManageTaskListsModalProps {
 
 export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskListsModalProps) {
   const { theme } = useTheme();
-  const { taskLists, updateTaskList, createTaskList, reorderTaskLists, resetToDefaults } = useTaskLists();
+  const { taskLists, updateTaskList, createTaskList, deleteTaskList, reorderTaskLists, resetToDefaults } = useTaskLists();
   const [taskListItems, setTaskListItems] = useState<ItemReference[]>([]);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
-  // Only show non-hidden lists - memoized to prevent unnecessary re-renders
-  const visibleLists = useMemo(() => 
-    taskLists.filter(l => !(l as any).hidden), 
-    [taskLists.map(l => l.id + l.name + (l as any).hidden).join(',')]
+  
+  // Show all lists - memoized to prevent unnecessary re-renders
+  const allLists = useMemo(() => 
+    taskLists, 
+    [taskLists.map(l => l.id + l.name).join(',')]
   );
   
   useEffect(() => {
     if (isOpen) {
-      setTaskListItems(visibleLists.map(l => ({ id: l.id, name: l.name })));
+      setTaskListItems(allLists.map(l => ({ id: l.id, name: l.name })));
     }
-  }, [isOpen, visibleLists]);
+  }, [isOpen, allLists]);
 
   // Validation logic
   const getValidationError = () => {
@@ -100,37 +101,25 @@ export default function ManageTaskListsModal({ isOpen, onClose }: ManageTaskList
       }
     });
     
-    // Hide lists that are not in the new items
+    // Delete lists that are not in the new items
     taskLists.forEach(list => {
-      if (!taskListItems.some(item => item.id === list.id) && !(list as any).hidden) {
-        updateTaskList(list.id, { hidden: true } as any);
-      }
-    });
-    
-    // Unhide lists that are in the new items but currently hidden
-    taskLists.forEach(list => {
-      if (taskListItems.some(item => item.id === list.id) && (list as any).hidden) {
-        updateTaskList(list.id, { hidden: false } as any);
+      if (!taskListItems.some(item => item.id === list.id)) {
+        deleteTaskList(list.id);
       }
     });
 
-    // Wait a bit for state updates to settle, then do reordering
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        // Map old IDs to new IDs for created lists
-        const orderedIds = taskListItems.map(item => {
-          const existingList = taskLists.find(list => list.id === item.id);
-          if (existingList) {
-            return item.id; // Use existing ID
-          }
-          // For new lists, find the created list by name
-          const createdList = createdLists.find(list => list.name === item.name);
-          return createdList ? createdList.id : item.id;
-        });
-        
-        reorderTaskLists(orderedIds);
-      }, 100);
-    }
+    // Map old IDs to new IDs for created lists
+    const orderedIds = taskListItems.map(item => {
+      const existingList = taskLists.find(list => list.id === item.id);
+      if (existingList) {
+        return item.id; // Use existing ID
+      }
+      // For new lists, find the created list by name
+      const createdList = createdLists.find(list => list.name === item.name);
+      return createdList ? createdList.id : item.id;
+    });
+    
+    reorderTaskLists(orderedIds);
     
     onClose();
   };
